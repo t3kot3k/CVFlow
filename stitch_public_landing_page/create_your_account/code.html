@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Create Your Account - Recruit AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2463eb",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#111621",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark min-h-screen transition-colors duration-200">
+<!-- Top Navigation Bar Component -->
+<header class="w-full border-b border-solid border-[#e7ebf3] dark:border-gray-800 bg-white dark:bg-background-dark px-6 md:px-10 py-3">
+<div class="max-w-[1200px] mx-auto flex items-center justify-between">
+<div class="flex items-center gap-3 text-primary">
+<div class="size-6">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-[#0e121b] dark:text-white text-xl font-bold leading-tight tracking-tight font-display">Recruit AI</h2>
+</div>
+<div class="flex items-center gap-4">
+<span class="hidden sm:inline text-sm text-gray-500 dark:text-gray-400">Already have an account?</span>
+<button class="flex min-w-[84px] cursor-pointer items-center justify-center rounded-lg h-10 px-5 bg-primary text-white text-sm font-bold leading-normal tracking-wide transition-opacity hover:opacity-90">
+                    Log in
+                </button>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="flex flex-1 items-center justify-center px-4 py-12 md:py-20">
+<div class="w-full max-w-[480px] flex flex-col items-center">
+<!-- Signup Card -->
+<div class="w-full bg-white dark:bg-[#1a2131] rounded-xl shadow-sm border border-[#e7ebf3] dark:border-gray-800 p-8 md:p-10">
+<!-- Headline & Body Text Components -->
+<div class="text-center mb-8">
+<h1 class="text-[#0e121b] dark:text-white tracking-tight text-3xl font-bold leading-tight mb-3 font-display">
+                        Create Your Account
+                    </h1>
+<p class="text-[#4d6599] dark:text-gray-400 text-base font-normal leading-relaxed">
+                        Join Recruit AI and accelerate your career with AI-driven tools.
+                    </p>
+</div>
+<!-- Form Fields -->
+<form class="space-y-5">
+<!-- Name Field Component -->
+<div class="flex flex-col gap-2">
+<label class="text-[#0e121b] dark:text-gray-200 text-sm font-semibold leading-normal">
+                            Full Name
+                        </label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary text-xl">person</span>
+<input class="form-input flex w-full min-w-0 flex-1 rounded-lg text-[#0e121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#d0d7e7] dark:border-gray-700 bg-transparent focus:border-primary h-14 placeholder:text-[#4d6599] pl-12 pr-4 text-base font-normal leading-normal transition-all" placeholder="John Doe" type="text" value=""/>
+</div>
+</div>
+<!-- Email Field Component -->
+<div class="flex flex-col gap-2">
+<label class="text-[#0e121b] dark:text-gray-200 text-sm font-semibold leading-normal">
+                            Email Address
+                        </label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary text-xl">mail</span>
+<input class="form-input flex w-full min-w-0 flex-1 rounded-lg text-[#0e121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#d0d7e7] dark:border-gray-700 bg-transparent focus:border-primary h-14 placeholder:text-[#4d6599] pl-12 pr-4 text-base font-normal leading-normal transition-all" placeholder="john@example.com" type="email" value=""/>
+</div>
+</div>
+<!-- Password Field Component -->
+<div class="flex flex-col gap-2">
+<label class="text-[#0e121b] dark:text-gray-200 text-sm font-semibold leading-normal">
+                            Password
+                        </label>
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary text-xl">lock</span>
+<input class="form-input flex w-full min-w-0 flex-1 rounded-lg text-[#0e121b] dark:text-white focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-[#d0d7e7] dark:border-gray-700 bg-transparent focus:border-primary h-14 placeholder:text-[#4d6599] pl-12 pr-12 text-base font-normal leading-normal transition-all" placeholder="••••••••" type="password" value=""/>
+<button class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" type="button">
+<span class="material-symbols-outlined text-xl">visibility</span>
+</button>
+</div>
+<p class="text-xs text-gray-500 dark:text-gray-400 mt-1 flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">info</span>
+                            Must be at least 8 characters with one number
+                        </p>
+</div>
+<!-- Signup Button Component -->
+<div class="pt-4">
+<button class="w-full flex items-center justify-center rounded-lg h-14 bg-primary text-white text-base font-bold leading-normal tracking-wide shadow-lg shadow-primary/20 hover:shadow-primary/30 active:scale-[0.98] transition-all" type="submit">
+                            Create Account
+                        </button>
+</div>
+</form>
+<!-- Terms Footer -->
+<div class="mt-6 text-center">
+<p class="text-xs text-[#4d6599] dark:text-gray-500 leading-normal">
+                        By signing up, you agree to our 
+                        <a class="text-primary hover:underline font-medium" href="#">Terms of Service</a> 
+                        and 
+                        <a class="text-primary hover:underline font-medium" href="#">Privacy Policy</a>.
+                    </p>
+</div>
+</div>
+<!-- Bottom Login Link (Mobile/Supplementary) -->
+<div class="mt-8 text-center sm:hidden">
+<p class="text-sm text-[#4d6599] dark:text-gray-400">
+                    Already have an account? 
+                    <a class="text-primary font-bold hover:underline" href="#">Log in</a>
+</p>
+</div>
+<!-- Trust Badges or Decorative Element -->
+<div class="mt-12 opacity-50 flex gap-8 items-center justify-center grayscale contrast-125 dark:invert">
+<img class="h-6 object-contain" data-alt="Trusted partner logos grayscale" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjgf2KJMxMIk4zuxjYi0GZ9jy8J9jDq95a1TsB9x2tJRLzsodqOLyA5hr5DNrMJWKqmkR-v7zels_eAr8jQGeSnOzU4pdGkfmUqklyWWT8UrFmKIhlfM2djEDrGHJVMQ-NfTk-irZwWuiMCdcS6xkJF2XUTUaJ9wgNGfQoi1QtEjn5wOjtbvVGiPsl9dP0BUFHzZPd6LjKbIWaKZGqs9xdSYFJk0KrHNK7hRbA54oY1mAHVFNRw4Vheufok_YCu4NM4MycyoK-sXHN"/>
+<img class="h-6 object-contain" data-alt="Company logos for social proof" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjlnGNoH5MKtp30eEnTiIKI3yW9ymNDgAp2xIR0JXtppdViJs1xqyw56UC_GctxpwF7bDRIIKc2wrRDhBLPAp_b20qGBi2TSU7fSlJghSHkJjwydr13d-uDE2SAkfqEfW4KZUz5iCsu1KooI9I0nfvrTTuX3siFVd5BmMoy8-bBXRzKTW5buVmb0sAOgqbFC7d0P8LPhmlmGaITzDmPrHVgyDzR8mDWhHevpzHSg2v6nfvle1b5IYNWeWSjCMwL-29dC6A278HGiWT"/>
+</div>
+</div>
+</main>
+<!-- Background Decoration -->
+<div class="fixed top-0 right-0 -z-10 w-1/3 h-1/2 bg-gradient-to-bl from-primary/5 to-transparent blur-3xl pointer-events-none"></div>
+<div class="fixed bottom-0 left-0 -z-10 w-1/3 h-1/2 bg-gradient-to-tr from-primary/5 to-transparent blur-3xl pointer-events-none"></div>
+</body></html>

@@ -1,0 +1,33 @@
+# FastAPI & Server
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+python-multipart==0.0.9
+
+# Validation & Settings
+pydantic==2.6.1
+pydantic-settings==2.1.0
+python-dotenv==1.0.1
+
+# Firebase Admin
+firebase-admin==6.4.0
+
+# Google Gemini AI
+google-generativeai==0.4.1
+
+# Stripe
+stripe==7.12.0
+
+# PDF & Document Processing
+pypdf2==3.0.1
+python-docx==1.1.0
+
+# HTTP Client
+httpx==0.26.0
+
+# Testing
+pytest>=7.0.0,<8.0.0
+pytest-asyncio==0.23.4
+
+# Development
+black==24.1.1
+isort==5.13.2

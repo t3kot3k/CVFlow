@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>CV Templates &amp; Editor - Recruit AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2463eb",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#111621",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d0d7e7; border-radius: 10px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-[#0e121b] dark:text-white transition-colors duration-200">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 w-full border-b border-solid border-[#e7ebf3] dark:border-gray-800 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md px-6 py-3">
+<div class="max-w-[1440px] mx-auto flex items-center justify-between">
+<div class="flex items-center gap-4 text-primary">
+<div class="size-8">
+<svg fill="currentColor" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z"></path>
+</svg>
+</div>
+<h1 class="text-[#0e121b] dark:text-white text-xl font-bold leading-tight tracking-tight">Recruit AI</h1>
+</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-[#4d6599] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Dashboard</a>
+<a class="text-[#4d6599] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">AI Tools</a>
+<a class="text-primary text-sm font-bold border-b-2 border-primary pb-1" href="#">CV Templates</a>
+<a class="text-[#4d6599] dark:text-gray-400 hover:text-primary dark:hover:text-primary text-sm font-medium transition-colors" href="#">Cover Letter</a>
+</nav>
+<div class="flex items-center gap-3">
+<div class="hidden sm:flex flex-col items-end mr-2">
+<span class="text-[10px] text-[#4d6599] dark:text-gray-500 uppercase font-bold tracking-widest">ATS Score</span>
+<div class="flex items-center gap-1">
+<div class="h-1.5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+<div class="h-full bg-green-500 w-[85%]"></div>
+</div>
+<span class="text-xs font-bold text-green-500">85%</span>
+</div>
+</div>
+<button class="flex min-w-[100px] cursor-pointer items-center justify-center rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold shadow-lg shadow-primary/20 hover:bg-blue-700 transition-all">
+<span class="material-symbols-outlined text-sm mr-2">download</span>
+                    Export PDF
+                </button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 border-2 border-white dark:border-gray-800 shadow-sm" data-alt="User profile avatar" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBvGUzObRhbdZqTmbuJPnUmHk3IbL8SkEkoRY0yyc14HBRqgwxbOqSs7fAwLTtF8liEwb4tIyGG8Q_Eb6F3VLO_8zAvqH3dK-TlrKt1gmBYB9lWzQExOJJIfZyLdC3u5mmDEG7gyDKKN7n9K1b5bYNkawcVW8SVLpAvxjLJ2gRPuM9VgiTnIzZIoL73bOvIMhZquILDctBsuzwWuLImaDJEUYV9pG1HTjavE0yx5uAX2vTRoC-qX4tphrt7FmM1GO-UKuY4pP_hbrzd");'></div>
+</div>
+</div>
+</header>
+<main class="flex h-[calc(100vh-65px)] overflow-hidden">
+<!-- Left Sidebar: Form Editor -->
+<aside class="w-full md:w-[45%] lg:w-[40%] bg-white dark:bg-gray-900 border-r border-[#e7ebf3] dark:border-gray-800 flex flex-col">
+<!-- Form Tabs -->
+<div class="px-6 pt-4 border-b border-[#e7ebf3] dark:border-gray-800">
+<div class="flex gap-6 overflow-x-auto no-scrollbar">
+<button class="flex flex-col items-center justify-center border-b-2 border-transparent text-[#4d6599] dark:text-gray-400 pb-3 whitespace-nowrap">
+<span class="text-sm font-bold">Personal Info</span>
+</button>
+<button class="flex flex-col items-center justify-center border-b-2 border-primary text-primary pb-3 whitespace-nowrap">
+<span class="text-sm font-bold">Experience</span>
+</button>
+<button class="flex flex-col items-center justify-center border-b-2 border-transparent text-[#4d6599] dark:text-gray-400 pb-3 whitespace-nowrap">
+<span class="text-sm font-bold">Education</span>
+</button>
+<button class="flex flex-col items-center justify-center border-b-2 border-transparent text-[#4d6599] dark:text-gray-400 pb-3 whitespace-nowrap">
+<span class="text-sm font-bold">Skills</span>
+</button>
+</div>
+</div>
+<!-- Editor Content -->
+<div class="flex-1 overflow-y-auto custom-scrollbar p-6">
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-[#0e121b] dark:text-white text-xl font-bold">Work Experience</h2>
+<button class="text-primary text-sm font-bold flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-lg">add_circle</span>
+                        Add Position
+                    </button>
+</div>
+<!-- Experience Card 1 -->
+<div class="bg-background-light dark:bg-gray-800/50 rounded-xl p-5 mb-6 border border-[#d0d7e7] dark:border-gray-700 relative group">
+<button class="absolute top-4 right-4 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined">delete</span>
+</button>
+<div class="grid grid-cols-1 gap-4">
+<div class="grid grid-cols-2 gap-4">
+<label class="flex flex-col gap-1.5">
+<span class="text-[#0e121b] dark:text-gray-200 text-sm font-semibold">Job Title</span>
+<input class="w-full rounded-lg border-[#d0d7e7] dark:border-gray-600 bg-white dark:bg-gray-800 text-[#0e121b] dark:text-white h-11 px-4 text-sm focus:ring-primary focus:border-primary" value="Senior Product Designer"/>
+</label>
+<label class="flex flex-col gap-1.5">
+<span class="text-[#0e121b] dark:text-gray-200 text-sm font-semibold">Company</span>
+<input class="w-full rounded-lg border-[#d0d7e7] dark:border-gray-600 bg-white dark:bg-gray-800 text-[#0e121b] dark:text-white h-11 px-4 text-sm focus:ring-primary focus:border-primary" value="TechFlow Inc."/>
+</label>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<label class="flex flex-col gap-1.5">
+<span class="text-[#0e121b] dark:text-gray-200 text-sm font-semibold">Start Date</span>
+<input class="w-full rounded-lg border-[#d0d7e7] dark:border-gray-600 bg-white dark:bg-gray-800 text-[#0e121b] dark:text-white h-11 px-4 text-sm focus:ring-primary focus:border-primary" placeholder="MM/YYYY" value="Jan 2021"/>
+</label>
+<label class="flex flex-col gap-1.5">
+<span class="text-[#0e121b] dark:text-gray-200 text-sm font-semibold">End Date</span>
+<input class="w-full rounded-lg border-[#d0d7e7] dark:border-gray-600 bg-white dark:bg-gray-800 text-[#0e121b] dark:text-white h-11 px-4 text-sm focus:ring-primary focus:border-primary" placeholder="Present" value="Present"/>
+</label>
+</div>
+<label class="flex flex-col gap-1.5">
+<div class="flex justify-between items-center">
+<span class="text-[#0e121b] dark:text-gray-200 text-sm font-semibold">Description</span>
+<button class="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">auto_awesome</span>
+                                    AI IMPROVE
+                                </button>
+</div>
+<textarea class="w-full rounded-lg border-[#d0d7e7] dark:border-gray-600 bg-white dark:bg-gray-800 text-[#0e121b] dark:text-white min-h-[120px] p-4 text-sm focus:ring-primary focus:border-primary resize-none">Led the design system team in creating a scalable UI library used by 50+ developers. Improved user retention by 25% through iterative UX research and high-fidelity prototyping.</textarea>
+</label>
+</div>
+</div>
+<!-- Experience Card 2 (Minimized) -->
+<div class="bg-white dark:bg-gray-800/30 rounded-xl p-4 border border-[#d0d7e7] dark:border-gray-700 flex items-center justify-between cursor-pointer hover:border-primary transition-colors">
+<div class="flex items-center gap-4">
+<div class="size-10 rounded-lg bg-[#e7ebf3] dark:bg-gray-700 flex items-center justify-center text-[#4d6599] dark:text-gray-400">
+<span class="material-symbols-outlined">work</span>
+</div>
+<div>
+<h4 class="text-sm font-bold text-[#0e121b] dark:text-white">UI Designer</h4>
+<p class="text-xs text-[#4d6599] dark:text-gray-400">Creative Agency • 2018 - 2020</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-gray-400">expand_more</span>
+</div>
+<!-- Footer of Sidebar -->
+<div class="mt-8 pt-6 border-t border-[#e7ebf3] dark:border-gray-800 flex justify-between items-center">
+<div class="flex items-center gap-2 text-xs text-[#4d6599] dark:text-gray-500">
+<span class="size-2 bg-green-500 rounded-full animate-pulse"></span>
+                        Changes saved
+                    </div>
+<div class="flex gap-2">
+<button class="px-4 py-2 rounded-lg bg-[#e7ebf3] dark:bg-gray-800 text-[#0e121b] dark:text-white text-sm font-bold hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                            Preview
+                        </button>
+<button class="px-4 py-2 rounded-lg bg-primary text-white text-sm font-bold hover:bg-blue-700 transition-colors">
+                            Next Step
+                        </button>
+</div>
+</div>
+</div>
+</aside>
+<!-- Right Side: Preview -->
+<section class="hidden md:flex flex-1 bg-[#f0f2f7] dark:bg-gray-950 flex-col items-center overflow-y-auto custom-scrollbar p-8">
+<div class="w-full max-w-[800px] flex justify-between items-center mb-6">
+<div class="flex items-center gap-4">
+<span class="text-sm font-medium text-[#4d6599] dark:text-gray-400 uppercase tracking-wider">Live Preview</span>
+<div class="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
+<div class="flex bg-white dark:bg-gray-900 rounded-lg p-1 border border-gray-200 dark:border-gray-800 shadow-sm">
+<button class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors">
+<span class="material-symbols-outlined text-xl">zoom_out</span>
+</button>
+<span class="px-3 flex items-center text-xs font-bold border-x border-gray-100 dark:border-gray-800">100%</span>
+<button class="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors">
+<span class="material-symbols-outlined text-xl">zoom_in</span>
+</button>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="p-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm text-gray-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<button class="p-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm text-gray-500 hover:text-primary transition-colors">
+<span class="material-symbols-outlined">grid_view</span>
+</button>
+</div>
+</div>
+<!-- CV Document Representation -->
+<div class="w-full max-w-[800px] bg-white shadow-2xl rounded-sm min-h-[1100px] p-12 text-[#1a1a1a] transition-all transform hover:scale-[1.01] origin-top">
+<!-- Header of CV -->
+<div class="flex justify-between items-start border-b-2 border-primary pb-8 mb-8">
+<div>
+<h2 class="text-4xl font-bold tracking-tight text-gray-900 mb-2">Alex Thompson</h2>
+<h3 class="text-lg font-medium text-primary uppercase tracking-widest">Senior Product Designer</h3>
+</div>
+<div class="text-right text-sm text-gray-600">
+<p class="flex items-center justify-end gap-2">alex.design@example.com <span class="material-symbols-outlined text-base">mail</span></p>
+<p class="flex items-center justify-end gap-2">+1 (555) 000-1234 <span class="material-symbols-outlined text-base">call</span></p>
+<p class="flex items-center justify-end gap-2">San Francisco, CA <span class="material-symbols-outlined text-base">location_on</span></p>
+</div>
+</div>
+<!-- Professional Summary -->
+<div class="mb-8">
+<h4 class="text-sm font-bold uppercase tracking-widest text-primary mb-3">Professional Summary</h4>
+<p class="text-sm leading-relaxed text-gray-700">
+                        Strategic and detail-oriented Product Designer with 6+ years of experience in building digital products. Expert in design systems, user-centric methodologies, and cross-functional collaboration. Proven track record of delivering impactful solutions for high-growth tech companies.
+                    </p>
+</div>
+<!-- Experience in Preview -->
+<div class="mb-8">
+<h4 class="text-sm font-bold uppercase tracking-widest text-primary mb-4">Work Experience</h4>
+<div class="mb-6">
+<div class="flex justify-between items-baseline mb-1">
+<h5 class="font-bold text-base text-gray-900">Senior Product Designer</h5>
+<span class="text-xs font-bold text-gray-500">Jan 2021 — Present</span>
+</div>
+<p class="text-sm font-semibold text-gray-700 mb-2">TechFlow Inc. | San Francisco, CA</p>
+<ul class="list-disc ml-4 text-sm text-gray-600 space-y-1">
+<li>Led the design system team in creating a scalable UI library used by 50+ developers.</li>
+<li>Improved user retention by 25% through iterative UX research and high-fidelity prototyping.</li>
+<li>Mentored junior designers and established design quality standards across the product organization.</li>
+</ul>
+</div>
+<div class="mb-6">
+<div class="flex justify-between items-baseline mb-1">
+<h5 class="font-bold text-base text-gray-900">UI Designer</h5>
+<span class="text-xs font-bold text-gray-500">Jun 2018 — Dec 2020</span>
+</div>
+<p class="text-sm font-semibold text-gray-700 mb-2">Creative Agency | New York, NY</p>
+<ul class="list-disc ml-4 text-sm text-gray-600 space-y-1">
+<li>Developed end-to-end user interfaces for various B2B and B2C clients.</li>
+<li>Collaborated with engineering teams to ensure pixel-perfect implementation of designs.</li>
+<li>Designed and executed multiple marketing campaigns that increased conversion by 15%.</li>
+</ul>
+</div>
+</div>
+<!-- Skills & Education -->
+<div class="grid grid-cols-2 gap-8">
+<div>
+<h4 class="text-sm font-bold uppercase tracking-widest text-primary mb-3">Technical Skills</h4>
+<div class="flex flex-wrap gap-2">
+<span class="text-[11px] px-2 py-1 bg-gray-100 rounded-sm font-bold">Figma</span>
+<span class="text-[11px] px-2 py-1 bg-gray-100 rounded-sm font-bold">React</span>
+<span class="text-[11px] px-2 py-1 bg-gray-100 rounded-sm font-bold">Tailwind CSS</span>
+<span class="text-[11px] px-2 py-1 bg-gray-100 rounded-sm font-bold">Adobe Suite</span>
+<span class="text-[11px] px-2 py-1 bg-gray-100 rounded-sm font-bold">Prototyping</span>
+<span class="text-[11px] px-2 py-1 bg-gray-100 rounded-sm font-bold">User Research</span>
+</div>
+</div>
+<div>
+<h4 class="text-sm font-bold uppercase tracking-widest text-primary mb-3">Education</h4>
+<div class="mb-2">
+<h5 class="text-sm font-bold text-gray-900">BFA in Graphic Design</h5>
+<p class="text-[12px] text-gray-600">Rhode Island School of Design</p>
+<p class="text-[11px] text-gray-500 font-medium">Class of 2018</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Template Selector Overlay (Hidden by default, triggered by "Change Template") -->
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm" id="template-modal">
+<div class="bg-white dark:bg-gray-900 w-full max-w-5xl h-[80vh] rounded-2xl overflow-hidden flex flex-col shadow-2xl">
+<div class="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+<h2 class="text-2xl font-bold">Select a Template</h2>
+<button class="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Template Card 1 -->
+<div class="group cursor-pointer">
+<div class="aspect-[1/1.4] bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-4 border-2 border-primary ring-4 ring-primary/10 relative">
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+<span class="bg-primary text-white px-6 py-2 rounded-full font-bold shadow-xl">Selected</span>
+</div>
+<div class="w-full h-full bg-cover bg-top" data-alt="Modern professional CV template preview" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDL_4YlxOjj-CEOWbHDM39Ux8llkCOaoolgsdNB8oIAIT0h6_DHJ4PznEn5tSF3c3HaClQAOAJeoqmH2DYJhMz8e-hkkzNibvZSl9rM-9E-aGHhk3SuTgvcuNJQK8YiOM1ITgWGOGd0Ybl31RNAwAay9asecs_4pDR07AdBiBJp_r-z8rM190PYNDYzRHrb7GJqGvvqrRxDrUwzZiqGx6JS_MtyU_aIKgeHsLev1GqhNWi7pJeXiTYIl4_JYU_pyd9yPuNNUZItGpof");'></div>
+</div>
+<div class="flex justify-between items-center">
+<h3 class="font-bold text-[#0e121b] dark:text-white">The Minimalist</h3>
+<span class="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold uppercase">ATS Optimized</span>
+</div>
+</div>
+<!-- Template Card 2 -->
+<div class="group cursor-pointer">
+<div class="aspect-[1/1.4] bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-4 border-2 border-transparent group-hover:border-primary transition-all relative">
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+<span class="bg-primary text-white px-6 py-2 rounded-full font-bold shadow-xl">Choose Template</span>
+</div>
+<div class="w-full h-full bg-cover bg-top" data-alt="Creative executive CV template preview" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuASS8iVXDFvSNCU90tKnkkhhqkSUphg1Xp_tcFygBRPe9IyjwtPPfSWwZsLVamSBxXYCE3qG4gL4908oiq7SPUi6ZLii9a5XxruVknRTIqdgZxRZHrGzQWhm6WDQvInfhXxgZyD1UJ0t2k8JktF-tks01tReJVk6OxfW6BkfWCyL_Oh1TqTKQfZwb-mUigPl6-6eNeUiJOS69csiZlUo90Y4FCyvh0hYbWIe2g1aza9Y0YYjQNTvpFX804CrULFJs_fW1xR9vBZrxoB");'></div>
+</div>
+<div class="flex justify-between items-center">
+<h3 class="font-bold text-[#0e121b] dark:text-white">The Executive</h3>
+<span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold uppercase">Modern</span>
+</div>
+</div>
+<!-- Template Card 3 -->
+<div class="group cursor-pointer">
+<div class="aspect-[1/1.4] bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-4 border-2 border-transparent group-hover:border-primary transition-all relative">
+<div class="absolute inset-0 bg-primary/20 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+<span class="bg-primary text-white px-6 py-2 rounded-full font-bold shadow-xl">Choose Template</span>
+</div>
+<div class="w-full h-full bg-cover bg-top" data-alt="Clean corporate CV template preview" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuB0phS5nGHEEZ_iuG_uk341bb2KvbARuTwLAy5rrtzZIBttLQ_bonwjQe6oeYZz2Jc8rv5j9kgU8LSpp6o8ZHDZB7kf-UPic6ZVigQo-g7LbilfLsCN0JfJKU2LYksnz22ISAw_85CSA4d6eVNwyzsAOpx0i3Ycm8uUzMT5YgRMnspIEmSZ6rlHllHXZtnIZkpwigoVBIJN3eLtMIOcyPY9lWUnKYx8npWW1k-j72T6G29FohfZcvB7OjWu3_b25pk_c7Ry7jwFMSbc");'></div>
+</div>
+<div class="flex justify-between items-center">
+<h3 class="font-bold text-[#0e121b] dark:text-white">Startup Hero</h3>
+<span class="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-bold uppercase">Creative</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Secure Checkout | Recruit AI</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#2463eb",
+                        "background-light": "#f6f6f8",
+                        "background-dark": "#111621",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<!-- Header / Navigation -->
+<div class="w-full flex justify-center py-4 border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-background-dark">
+<header class="max-w-[1200px] w-full px-6 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<div class="text-primary size-8">
+<svg fill="currentColor" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M44 4H30.6666V17.3334H17.3334V30.6666H4V44H44V4Z"></path>
+</svg>
+</div>
+<h2 class="text-[#0e121b] dark:text-white text-xl font-bold tracking-tight">Recruit AI</h2>
+</div>
+<div class="flex items-center gap-6">
+<a class="text-gray-500 hover:text-primary transition-colors text-sm font-medium flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-lg">arrow_back</span> Back to Pricing
+                    </a>
+</div>
+</header>
+</div>
+<main class="flex-1 flex justify-center py-12 px-6">
+<div class="max-w-[1000px] w-full grid grid-cols-1 lg:grid-cols-2 gap-16">
+<!-- Left Column: Order Summary -->
+<div class="flex flex-col gap-8">
+<div class="flex flex-col gap-3">
+<p class="text-primary text-sm font-semibold uppercase tracking-wider">Order Summary</p>
+<h1 class="text-[#0e121b] dark:text-white text-4xl font-black leading-tight tracking-tight">Professional AI Bundle</h1>
+<p class="text-gray-500 dark:text-gray-400 text-lg">Empower your job search with our most popular AI-driven tools.</p>
+</div>
+<div class="bg-white dark:bg-gray-900 rounded-xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
+<ul class="space-y-4">
+<li class="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-400">
+<span class="material-symbols-outlined text-green-500">check_circle</span>
+<span>Unlimited CV Optimizations</span>
+</li>
+<li class="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-400">
+<span class="material-symbols-outlined text-green-500">check_circle</span>
+<span>10 Professional AI Headshots</span>
+</li>
+<li class="flex items-start gap-3 text-sm text-gray-600 dark:text-gray-400">
+<span class="material-symbols-outlined text-green-500">check_circle</span>
+<span>Cover Letter Generation API</span>
+</li>
+</ul>
+<div class="mt-8 pt-8 border-t border-gray-100 dark:border-gray-800">
+<div class="flex justify-between py-2">
+<p class="text-gray-500 dark:text-gray-400 text-sm">Subtotal</p>
+<p class="text-[#0e121b] dark:text-white text-sm font-medium">$49.00</p>
+</div>
+<div class="flex justify-between py-2">
+<p class="text-gray-500 dark:text-gray-400 text-sm">Tax (0%)</p>
+<p class="text-[#0e121b] dark:text-white text-sm font-medium">$0.00</p>
+</div>
+<div class="flex justify-between py-2 mt-2">
+<p class="text-[#0e121b] dark:text-white text-lg font-bold">Total due</p>
+<p class="text-[#0e121b] dark:text-white text-2xl font-black text-right">$49.00</p>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<div class="flex items-center gap-4 grayscale opacity-60">
+<div class="h-8 w-12 bg-gray-200 rounded flex items-center justify-center text-[10px] font-bold">VISA</div>
+<div class="h-8 w-12 bg-gray-200 rounded flex items-center justify-center text-[10px] font-bold">MC</div>
+<div class="h-8 w-12 bg-gray-200 rounded flex items-center justify-center text-[10px] font-bold">AMEX</div>
+<div class="h-8 w-12 bg-gray-200 rounded flex items-center justify-center text-[10px] font-bold">GPay</div>
+</div>
+<p class="text-xs text-gray-400 flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">lock</span>
+                            Secure SSL Encryption. All payments are processed via Stripe.
+                        </p>
+</div>
+</div>
+<!-- Right Column: Payment Form -->
+<div class="bg-white dark:bg-gray-900 rounded-xl p-8 border border-gray-200 dark:border-gray-800 shadow-xl">
+<h3 class="text-[#0e121b] dark:text-white text-2xl font-bold leading-tight mb-8">Payment Details</h3>
+<form class="flex flex-col gap-6">
+<!-- Email Field (Pre-filled or Required) -->
+<div class="flex flex-col gap-2">
+<label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Email Address</label>
+<input class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="alex@example.com" type="email"/>
+</div>
+<!-- Cardholder Name -->
+<div class="flex flex-col gap-2">
+<label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Cardholder Name</label>
+<input class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="e.g. Alex Johnson" type="text"/>
+</div>
+<!-- Card Details Group -->
+<div class="flex flex-col gap-2">
+<label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Card Information</label>
+<div class="relative">
+<input class="w-full px-4 py-3 rounded-t-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all border-b-0" placeholder="1234 5678 1234 5678" type="text"/>
+<div class="absolute right-3 top-3.5 flex items-center gap-2 text-gray-400">
+<span class="material-symbols-outlined">credit_card</span>
+</div>
+</div>
+<div class="flex -mt-[1px]">
+<input class="w-1/2 px-4 py-3 rounded-bl-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all border-r-0" placeholder="MM / YY" type="text"/>
+<input class="w-1/2 px-4 py-3 rounded-br-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all" placeholder="CVC" type="text"/>
+</div>
+</div>
+<!-- Country/Region -->
+<div class="flex flex-col gap-2">
+<label class="text-sm font-semibold text-gray-700 dark:text-gray-300">Country or region</label>
+<select class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary focus:border-primary outline-none transition-all appearance-none">
+<option>United States</option>
+<option>United Kingdom</option>
+<option>Canada</option>
+<option>Germany</option>
+<option>France</option>
+</select>
+</div>
+<!-- Payment Button -->
+<button class="w-full bg-primary hover:bg-blue-700 text-white font-bold py-4 rounded-lg shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2 mt-4" type="submit">
+                            Pay $49.00
+                            <span class="material-symbols-outlined text-xl">arrow_forward</span>
+</button>
+<!-- Final Trust Badge -->
+<div class="flex items-center justify-center gap-2 text-gray-400 mt-4">
+<span class="material-symbols-outlined text-base">verified_user</span>
+<span class="text-xs">Guaranteed safe &amp; secure checkout</span>
+</div>
+</form>
+</div>
+</div>
+</main>
+<!-- Minimal Footer -->
+<footer class="w-full flex justify-center py-8 border-t border-gray-200 dark:border-gray-800">
+<div class="max-w-[1200px] w-full px-6 flex flex-wrap justify-center gap-8 text-xs text-gray-500 uppercase tracking-widest font-medium">
+<a class="hover:text-primary transition-colors" href="#">Terms of Service</a>
+<a class="hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="hover:text-primary transition-colors" href="#">Refund Policy</a>
+</div>
+</footer>
+</div>
+</body></html>
