@@ -18,6 +18,7 @@ export interface UserProfile {
   displayName: string | null;
   photoURL: string | null;
   plan: "free" | "premium";
+  credits: number;
   stripeCustomerId?: string;
   createdAt: Date;
   consentTerms: boolean;
@@ -31,6 +32,7 @@ interface CreateUserProfile {
   displayName: string | null;
   photoURL: string | null;
   plan: "free" | "premium";
+  credits: number;
   consentTerms: boolean;
   consentMarketing: boolean;
   createdAt: FieldValue;
@@ -74,12 +76,21 @@ async function createUserProfile(
       displayName: additionalData?.displayName ?? user.displayName,
       photoURL: user.photoURL,
       plan: "free",
+      credits: 0,
       consentTerms: true,
       consentMarketing: false,
       createdAt: serverTimestamp(),
     };
 
     await setDoc(userRef, profile);
+
+    // Grant welcome credits via backend (fire-and-forget)
+    try {
+      const { creditsApi } = await import("@/lib/api/client");
+      await creditsApi.initializeWelcomeCredits();
+    } catch {
+      // Silently fail; welcome credits can be granted on next login
+    }
   }
 
   return userRef;

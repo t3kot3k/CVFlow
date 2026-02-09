@@ -11,6 +11,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   isPremium: boolean;
+  credits: number;
   signOut: () => Promise<void>;
 }
 
@@ -79,6 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     isAuthenticated: !!user,
     isPremium: profile?.plan === "premium",
+    credits: profile?.credits ?? 0,
     signOut: handleSignOut,
   };
 

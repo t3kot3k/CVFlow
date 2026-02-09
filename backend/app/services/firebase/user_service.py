@@ -28,6 +28,7 @@ class UserService:
             display_name=data.get("displayName"),
             photo_url=data.get("photoURL"),
             plan=data.get("plan", "free"),
+            credits=data.get("credits", 0),
             stripe_customer_id=data.get("stripeCustomerId"),
             created_at=data.get("createdAt"),
             consent_terms=data.get("consentTerms", True),
@@ -74,7 +75,7 @@ class UserService:
         user_ref = self.db.collection(self.COLLECTION).document(uid)
 
         # Delete subcollections
-        subcollections = ["cv_documents", "cv_analyses", "cover_letters", "user_cv_data", "photo_enhancements"]
+        subcollections = ["cv_documents", "cv_analyses", "cover_letters", "user_cv_data", "photo_enhancements", "credit_transactions"]
         for subcoll in subcollections:
             docs = user_ref.collection(subcoll).stream()
             for doc in docs:
@@ -100,6 +101,7 @@ class UserService:
                 display_name=data.get("displayName"),
                 photo_url=data.get("photoURL"),
                 plan=data.get("plan", "free"),
+                credits=data.get("credits", 0),
                 stripe_customer_id=data.get("stripeCustomerId"),
                 created_at=data.get("createdAt"),
                 consent_terms=data.get("consentTerms", True),

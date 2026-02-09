@@ -7,10 +7,14 @@ export function CTABanner() {
   return (
     <section className="px-6 lg:px-40 py-20">
       <div className="max-w-[1280px] mx-auto bg-primary rounded-3xl p-12 text-center text-white">
-        <h2 className="text-4xl font-black mb-6">Ready to land your next job?</h2>
-        <p className="text-white/80 text-lg mb-10 max-w-[600px] mx-auto">
-          Join thousands of job seekers who use Recruit AI to track their
+        <h2 className="text-4xl font-black mb-4">Ready to land your next job?</h2>
+        <p className="text-white/80 text-lg mb-4 max-w-[600px] mx-auto">
+          Join 10,000+ job seekers who use Recruit AI to optimize their
           applications and get hired faster.
+        </p>
+        <p className="text-white/60 text-sm mb-10 flex items-center justify-center gap-2">
+          <span className="material-symbols-outlined text-sm">trending_up</span>
+          Users report 3x more interview callbacks on average
         </p>
         <Button
           variant="secondary"

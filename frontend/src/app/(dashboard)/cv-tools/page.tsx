@@ -6,6 +6,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useCreditGate } from "@/hooks/use-credit-gate";
+import { PaywallModal } from "@/components/modals/paywall-modal";
 
 const tones = [
   { id: "classic", label: "Classic" },
@@ -31,6 +33,8 @@ I am particularly impressed by [Company Name]'s commitment to [Company Value or 
 Best regards,
 [Your Name]`);
 
+  const { showPaywall, paywallProps, closePaywall, gateAction } = useCreditGate();
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(true);
@@ -43,6 +47,20 @@ Best regards,
     setIsDragging(false);
     const droppedFile = e.dataTransfer.files?.[0];
     if (droppedFile) setFile(droppedFile);
+  };
+
+  const handleOptimize = () => {
+    gateAction("ats_cv_analysis", "ATS CV Analysis", () => {
+      // TODO: call cvApi.analyze() here
+      console.log("Proceeding with CV analysis...");
+    });
+  };
+
+  const handleGenerateLetter = () => {
+    gateAction("cover_letter", "Cover Letter Generation", () => {
+      // TODO: call coverLetterApi.generate() here
+      console.log("Proceeding with cover letter generation...");
+    });
   };
 
   return (
@@ -124,7 +142,9 @@ Best regards,
                 className="min-h-[160px]"
               />
 
-              <Button className="w-full">Optimize & Analyze</Button>
+              <Button className="w-full" onClick={handleOptimize}>
+                Optimize & Analyze
+              </Button>
             </CardContent>
           </Card>
 
@@ -222,7 +242,7 @@ Best regards,
               </div>
             </div>
 
-            <Button className="w-full">
+            <Button className="w-full" onClick={handleGenerateLetter}>
               <span className="material-symbols-outlined text-xl">magic_button</span>
               Generate Letter
             </Button>
@@ -258,6 +278,13 @@ Best regards,
           </CardContent>
         </Card>
       </div>
+
+      {/* Paywall Modal */}
+      <PaywallModal
+        isOpen={showPaywall}
+        onClose={closePaywall}
+        {...paywallProps}
+      />
     </>
   );
 }

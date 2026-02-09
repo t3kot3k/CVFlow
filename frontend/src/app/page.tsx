@@ -3,8 +3,10 @@ import { Footer } from "@/components/layout/footer";
 import {
   Hero,
   CompanyLogos,
-  Features,
   HowItWorks,
+  Comparison,
+  Testimonials,
+  Features,
   Pricing,
   FAQ,
   CTABanner,
@@ -17,8 +19,10 @@ export default function HomePage() {
       <main className="flex-1">
         <Hero />
         <CompanyLogos />
-        <Features />
         <HowItWorks />
+        <Comparison />
+        <Testimonials />
+        <Features />
         <Pricing />
         <FAQ />
         <CTABanner />

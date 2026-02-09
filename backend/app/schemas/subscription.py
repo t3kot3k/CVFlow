@@ -38,3 +38,12 @@ class CheckoutSessionResponse(BaseModel):
 class PortalSessionResponse(BaseModel):
     """Response with Stripe customer portal URL."""
     portal_url: str
+
+
+class MonetizationStatus(BaseModel):
+    """Combined subscription + credit status for the frontend."""
+    plan: Literal["free", "premium"]
+    subscription_status: Literal["active", "canceled", "past_due", "unpaid", "trialing", "none"] = "none"
+    credits: int
+    current_period_end: Optional[datetime] = None
+    cancel_at_period_end: bool = False

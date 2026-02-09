@@ -61,7 +61,7 @@ export default function SignupPage() {
 
     try {
       await signUpWithEmail(formData.email, formData.password, formData.fullName);
-      router.push("/pricing");
+      router.push("/pricing?new=true");
     } catch (error) {
       if (error instanceof FirebaseError) {
         setErrors({ general: getFirebaseErrorMessage(error) });

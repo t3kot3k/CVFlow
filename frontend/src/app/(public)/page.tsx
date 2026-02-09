@@ -1,8 +1,10 @@
 import {
   Hero,
   CompanyLogos,
-  Features,
   HowItWorks,
+  Comparison,
+  Testimonials,
+  Features,
   Pricing,
   FAQ,
   CTABanner,
@@ -13,8 +15,10 @@ export default function HomePage() {
     <>
       <Hero />
       <CompanyLogos />
-      <Features />
       <HowItWorks />
+      <Comparison />
+      <Testimonials />
+      <Features />
       <Pricing />
       <FAQ />
       <CTABanner />

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from app.core.security import get_current_user, CurrentUser
-from app.services.firebase import user_service, usage_service
+from app.services.firebase import user_service, usage_service, credit_service
 from app.services.stripe import stripe_service
 from app.schemas.subscription import (
     SubscriptionStatus,
@@ -8,6 +8,7 @@ from app.schemas.subscription import (
     CheckoutSessionRequest,
     CheckoutSessionResponse,
     PortalSessionResponse,
+    MonetizationStatus,
 )
 import stripe
 
@@ -43,6 +44,26 @@ async def get_usage_limits(
 
     usage = await usage_service.get_usage(current_user.uid, plan)
     return usage
+
+
+@router.get("/monetization-status", response_model=MonetizationStatus)
+async def get_monetization_status(
+    current_user: CurrentUser = Depends(get_current_user),
+):
+    """Get combined subscription + credit status."""
+    user = await user_service.get_user(current_user.uid)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return MonetizationStatus(
+        plan=user.plan,
+        subscription_status="active" if user.plan == "premium" else "none",
+        credits=user.credits,
+    )
 
 
 @router.post("/checkout", response_model=CheckoutSessionResponse)

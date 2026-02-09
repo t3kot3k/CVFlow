@@ -29,6 +29,16 @@ const faqs = [
     answer:
       "Our AI has been trained on thousands of job descriptions and CVs. We achieve 95%+ accuracy in keyword matching and formatting checks used by major ATS systems.",
   },
+  {
+    question: "Are the CV templates really ATS-friendly?",
+    answer:
+      "Yes. Every template in our library has been tested against the major ATS systems used by Fortune 500 companies, including Workday, Greenhouse, Lever, and Taleo. Our templates use clean formatting, standard fonts, and proper heading structures that ATS parsers can read reliably.",
+  },
+  {
+    question: "How does Recruit AI compare to free CV builders?",
+    answer:
+      "Free CV builders typically offer basic templates without AI analysis. Recruit AI goes further with AI-powered ATS scoring, keyword gap analysis, tailored cover letter generation, professional photo enhancement, and real-time application tracking -- tools specifically designed to increase your interview rate.",
+  },
 ];
 
 export function FAQ() {

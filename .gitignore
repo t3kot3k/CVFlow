@@ -1,0 +1,58 @@
+# =============================================
+# Recruit AI - Root .gitignore
+# =============================================
+
+# ---- Environment & Secrets ----
+.env
+.env.local
+.env.*.local
+.env.production
+.env.staging
+# Keep .env.example files (they contain no secrets)
+!.env.example
+!.env.local.example
+
+# ---- Firebase Service Account Keys ----
+*firebase-adminsdk*
+*service-account*
+service-account.json
+firebase-credentials.json
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ---- Node.js ----
+node_modules/
+.next/
+out/
+.vercel
+
+# ---- IDE ----
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# ---- Build artifacts ----
+*.pem
+*.key

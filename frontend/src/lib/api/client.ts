@@ -178,6 +178,7 @@ interface UserProfile {
   display_name: string | null;
   photo_url: string | null;
   plan: "free" | "premium";
+  credits: number;
   created_at: string | null;
 }
 
@@ -270,6 +271,99 @@ interface PortalSessionResponse {
   portal_url: string;
 }
 
+// --- Credit System Types ---
+
+type ActionType =
+  | "ats_cv_analysis"
+  | "cv_optimization"
+  | "cv_download"
+  | "cv_regeneration"
+  | "cover_letter"
+  | "ai_headshot"
+  | "send_cv_email"
+  | "email_tracking";
+
+type CreditPackId = "pack_5" | "pack_15" | "pack_40";
+
+interface CreditBalance {
+  balance: number;
+  plan: "free" | "premium";
+  is_premium: boolean;
+}
+
+interface ActionCheckResponse {
+  allowed: boolean;
+  reason: string;
+  credits_required: number;
+  credits_remaining: number;
+  covered_by_pro: boolean;
+}
+
+interface CreditPurchaseResponse {
+  checkout_url: string;
+  session_id: string;
+}
+
+interface CreditTransaction {
+  id: string;
+  action: ActionType | null;
+  credits_delta: number;
+  balance_after: number;
+  description: string;
+  source: "action" | "purchase" | "welcome_bonus" | "admin_adjustment";
+  stripe_session_id: string | null;
+  created_at: string;
+}
+
+interface CreditHistoryResponse {
+  transactions: CreditTransaction[];
+  total_count: number;
+}
+
+interface MonetizationStatus {
+  plan: "free" | "premium";
+  subscription_status: string;
+  credits: number;
+  current_period_end: string | null;
+  cancel_at_period_end: boolean;
+}
+
+// Credit endpoints
+export const creditsApi = {
+  getBalance: () =>
+    request<CreditBalance>("/credits/balance"),
+
+  checkAction: (action: ActionType) =>
+    request<ActionCheckResponse>("/credits/check-action", {
+      method: "POST",
+      body: JSON.stringify({ action }),
+    }),
+
+  purchase: (packId: CreditPackId, successUrl: string, cancelUrl: string) =>
+    request<CreditPurchaseResponse>("/credits/purchase", {
+      method: "POST",
+      body: JSON.stringify({
+        pack_id: packId,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+      }),
+    }),
+
+  getHistory: (limit = 50, offset = 0) =>
+    request<CreditHistoryResponse>(`/credits/history?limit=${limit}&offset=${offset}`),
+
+  initializeWelcomeCredits: () =>
+    request<{ credits: number }>("/users/initialize-credits", {
+      method: "POST",
+    }),
+};
+
+// Monetization status (combined endpoint)
+export const monetizationApi = {
+  getStatus: () =>
+    request<MonetizationStatus>("/subscriptions/monetization-status"),
+};
+
 export { ApiError };
 export type {
   UserProfile,
@@ -282,4 +376,12 @@ export type {
   CoverLetterListItem,
   SubscriptionStatus,
   UsageLimits,
+  ActionType,
+  CreditPackId,
+  CreditBalance,
+  ActionCheckResponse,
+  CreditPurchaseResponse,
+  CreditTransaction,
+  CreditHistoryResponse,
+  MonetizationStatus,
 };

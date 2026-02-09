@@ -14,6 +14,7 @@ class UserProfile(UserBase):
     """User profile as stored in Firestore."""
     uid: str
     plan: str = "free"
+    credits: int = 0
     stripe_customer_id: Optional[str] = None
     created_at: Optional[datetime] = None
     consent_terms: bool = True
@@ -33,6 +34,7 @@ class UserResponse(UserBase):
     """User response schema."""
     uid: str
     plan: str
+    credits: int = 0
     created_at: Optional[datetime] = None
 
     class Config:

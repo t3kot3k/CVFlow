@@ -1,0 +1,30 @@
+# Environment & Secrets
+.env
+!.env.example
+
+# Firebase Service Account (NEVER commit these)
+*firebase-adminsdk*
+*service-account*
+service-account.json
+firebase-credentials.json
+*.json
+!package.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/

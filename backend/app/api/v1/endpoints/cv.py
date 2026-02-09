@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from typing import Optional, Union, List
 from app.core.security import get_current_user, get_optional_user, CurrentUser
-from app.services.firebase import user_service, cv_service, usage_service
+from app.services.firebase import user_service, cv_service, credit_service
+from app.schemas.credit import ActionType
 from app.services.ai import analyze_cv
 from app.utils.document_parser import extract_text_from_file, validate_file
 from app.schemas.cv import (
@@ -36,18 +37,22 @@ async def analyze_cv_endpoint(
             detail=error,
         )
 
-    # Check usage limits for authenticated users
+    # Check credits/subscription for authenticated users
     if current_user:
         user = await user_service.get_user(current_user.uid)
         plan = user.plan if user else "free"
 
-        can_analyze = await usage_service.can_use_feature(
-            current_user.uid, "cv_analysis", plan
+        auth_result = await credit_service.authorize_action(
+            current_user.uid, ActionType.ATS_CV_ANALYSIS, plan
         )
-        if not can_analyze:
+        if not auth_result["allowed"]:
             raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Monthly CV analysis limit reached. Upgrade to Premium for unlimited analyses.",
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail={
+                    "message": "Insufficient credits. Purchase credits or upgrade to Pro.",
+                    "credits_required": auth_result["credits_required"],
+                    "credits_remaining": auth_result["credits_remaining"],
+                },
             )
 
     # Extract text from CV
@@ -73,12 +78,11 @@ async def analyze_cv_endpoint(
     is_preview = current_user is None
     analysis = await analyze_cv(cv_text, job_description, is_preview=is_preview)
 
-    # For authenticated users, save analysis and increment usage
+    # For authenticated users, save analysis
     if current_user and isinstance(analysis, CVAnalysisResult):
         analysis_id = await cv_service.save_analysis(current_user.uid, analysis)
         analysis.id = analysis_id
         analysis.user_id = current_user.uid
-        await usage_service.increment_usage(current_user.uid, "cv_analysis")
 
     return analysis
 

@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List
 from app.core.security import get_current_user, CurrentUser
-from app.services.firebase import user_service, cover_letter_service, usage_service
+from app.services.firebase import user_service, cover_letter_service, credit_service
+from app.schemas.credit import ActionType
 from app.services.ai import generate_cover_letter
 from app.schemas.cover_letter import (
     CoverLetterRequest,
@@ -19,17 +20,21 @@ async def generate_cover_letter_endpoint(
     current_user: CurrentUser = Depends(get_current_user),
 ):
     """Generate a personalized cover letter using AI."""
-    # Check usage limits
+    # Check credits/subscription
     user = await user_service.get_user(current_user.uid)
     plan = user.plan if user else "free"
 
-    can_generate = await usage_service.can_use_feature(
-        current_user.uid, "cover_letter", plan
+    auth_result = await credit_service.authorize_action(
+        current_user.uid, ActionType.COVER_LETTER, plan
     )
-    if not can_generate:
+    if not auth_result["allowed"]:
         raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Monthly cover letter limit reached. Upgrade to Premium for unlimited cover letters.",
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail={
+                "message": "Insufficient credits. Purchase credits or upgrade to Pro.",
+                "credits_required": auth_result["credits_required"],
+                "credits_remaining": auth_result["credits_remaining"],
+            },
         )
 
     # Generate cover letter
@@ -47,9 +52,6 @@ async def generate_cover_letter_endpoint(
     )
     cover_letter.id = letter_id
     cover_letter.user_id = current_user.uid
-
-    # Increment usage
-    await usage_service.increment_usage(current_user.uid, "cover_letter")
 
     return cover_letter
 
