@@ -1,8 +1,12 @@
+from __future__ import annotations
 import json
+import logging
 import re
-from typing import Optional
+from typing import Optional, List
 from .gemini_client import generate_content
 from app.schemas.cv import OptimizedCV, OptimizedCVSection
+
+logger = logging.getLogger(__name__)
 
 
 CV_OPTIMIZE_PROMPT = """You are an expert CV writer and ATS optimization specialist. Based on the original CV content and the job description, create an optimized version of the CV that maximizes ATS compatibility while remaining honest and accurate.
@@ -86,7 +90,12 @@ async def optimize_cv(
         missing_keywords=", ".join(missing_keywords) if missing_keywords else "None identified.",
     )
 
-    response_text = await generate_content(prompt, max_tokens=4096)
+    response_text = await generate_content(
+        prompt,
+        max_tokens=16384,
+        temperature=0.2,
+        thinking_budget=0,
+    )
 
     data = _parse_json_response(response_text)
 
@@ -126,20 +135,68 @@ async def optimize_cv(
 
 
 def _parse_json_response(response_text: str) -> dict:
-    """Parse JSON from Gemini response."""
-    json_match = re.search(r'\{[\s\S]*\}', response_text)
-    if json_match:
-        try:
-            return json.loads(json_match.group())
-        except json.JSONDecodeError:
-            pass
+    """Parse JSON from Gemini response. Raises ValueError on failure."""
+    raw = response_text.strip()
+    logger.debug("_parse_json_response (optimizer) – raw length=%d", len(raw))
 
-    return {
-        "contact": {},
-        "summary": "Unable to optimize CV. Please try again.",
-        "experience": [],
-        "education": [],
-        "skills": [],
-        "certifications": [],
-        "estimated_score": 50,
-    }
+    # ── Strategy 0: extract content inside ```json ... ``` fences ──
+    fence_match = re.search(r"```(?:json)?\s*\n?(.*?)```", raw, re.DOTALL)
+    if fence_match:
+        inside = fence_match.group(1).strip()
+        try:
+            result = json.loads(inside)
+            if isinstance(result, dict):
+                logger.debug("Strategy 0 (fence extract) succeeded")
+                return result
+        except json.JSONDecodeError as e:
+            logger.debug("Strategy 0 parse failed: %s", e)
+
+    # ── Strategy 1: strip all markdown fences, then direct parse ──
+    cleaned = re.sub(r"```(?:json)?", "", raw).strip()
+    try:
+        result = json.loads(cleaned)
+        if isinstance(result, dict):
+            logger.debug("Strategy 1 (cleaned direct) succeeded")
+            return result
+    except json.JSONDecodeError as e:
+        logger.debug("Strategy 1 parse failed: %s", e)
+
+    # ── Strategy 2: extract outermost { … } ──
+    depth = 0
+    start = None
+    for i, ch in enumerate(cleaned):
+        if ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0 and start is not None:
+                try:
+                    result = json.loads(cleaned[start : i + 1])
+                    if isinstance(result, dict):
+                        logger.debug("Strategy 2 (brace extract) succeeded")
+                        return result
+                except json.JSONDecodeError:
+                    pass
+                start = None
+
+    # ── Detect truncation (JSON cut off by max_tokens) ──
+    if cleaned.startswith("{") and not cleaned.endswith("}"):
+        logger.error(
+            "JSON appears TRUNCATED (optimizer). Response length=%d chars.", len(raw)
+        )
+        raise ValueError(
+            "AI response was truncated (JSON incomplete). Please retry."
+        )
+
+    # Nothing worked
+    logger.error(
+        "JSON PARSE FAILED (optimizer) – raw response (%d chars):\n%.1000s",
+        len(response_text),
+        response_text,
+    )
+    raise ValueError(
+        "Could not parse JSON from AI response. "
+        f"Raw length={len(response_text)}, first 200 chars: {response_text[:200]}"
+    )

@@ -1,5 +1,6 @@
+from __future__ import annotations
 from google.cloud import firestore
-from typing import Optional
+from typing import Optional, List
 from app.core.firebase import get_firestore_client
 from app.schemas.application import ApplicationCreate, ApplicationUpdate, ApplicationResponse
 

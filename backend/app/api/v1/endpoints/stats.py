@@ -36,7 +36,7 @@ async def get_user_stats(
         )
         if latest:
             data = latest[0].to_dict()
-            latest_cv_score = data.get("overallScore")
+            latest_cv_score = data.get("matchScore") or data.get("overallScore")
 
     return UserStats(
         cv_count=cv_count,

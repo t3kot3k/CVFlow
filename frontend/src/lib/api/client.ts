@@ -1,6 +1,6 @@
 import { getIdToken } from "@/lib/firebase";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8066/api/v1";
 
 interface RequestOptions extends RequestInit {
   authenticated?: boolean;
@@ -45,10 +45,20 @@ async function request<T>(
     (headers as Record<string, string>)["Content-Type"] = "application/json";
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...fetchOptions,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...fetchOptions,
+      headers,
+    });
+  } catch (networkError) {
+    console.error(`Network error calling ${API_BASE_URL}${endpoint}:`, networkError);
+    throw new ApiError(
+      "Impossible de contacter le serveur. Vérifiez votre connexion ou réessayez.",
+      0,
+      { detail: "Network error: server unreachable" }
+    );
+  }
 
   // Handle no content responses
   if (response.status === 204) {
@@ -284,38 +294,77 @@ interface UserProfile {
   created_at: string | null;
 }
 
+interface ScoreBreakdown {
+  skillsMatch: number;
+  experienceMatch: number;
+  educationMatch: number;
+  keywordsMatch: number;
+  overallRelevance: number;
+}
+
+interface MatchedKeyword {
+  keyword: string;
+  context: string;
+}
+
+interface MissingKeyword {
+  keyword: string;
+  importance: "High" | "Medium" | "Low";
+  suggestion: string;
+}
+
+interface ExperienceAlignment {
+  strongMatches: string[];
+  partialMatches: string[];
+  gaps: string[];
+}
+
+interface TechnicalSkillsAnalysis {
+  alignedSkills: string[];
+  missingCriticalSkills: string[];
+  recommendedAdditions: string[];
+}
+
+interface SoftSkillsAnalysis {
+  alignedSoftSkills: string[];
+  missingSoftSkills: string[];
+}
+
+interface AtsFormattingCheck {
+  formatScore: number;
+  issuesDetected: string[];
+  recommendations: string[];
+}
+
+interface OptimizationSuggestion {
+  priority: "High" | "Medium" | "Low";
+  title: string;
+  description: string;
+  exampleRewrite: string;
+}
+
 interface CVAnalysisResult {
   id: string;
   user_id: string;
-  overall_score: number;
-  ats_compatibility: number;
-  keyword_matches: KeywordMatch[];
-  missing_keywords: string[];
-  sections: CVSection[];
+  matchScore: number;
+  scoreBreakdown: ScoreBreakdown;
+  matchedKeywords: MatchedKeyword[];
+  missingKeywords: MissingKeyword[];
+  experienceAlignment: ExperienceAlignment;
+  technicalSkillsAnalysis: TechnicalSkillsAnalysis;
+  softSkillsAnalysis: SoftSkillsAnalysis;
+  atsFormattingCheck: AtsFormattingCheck;
+  optimizationSuggestions: OptimizationSuggestion[];
   summary: string;
-  improvement_tips: string[];
   created_at: string;
 }
 
 interface CVAnalysisPreview {
-  overall_score: number;
-  preview_keywords: KeywordMatch[];
-  summary_preview: string;
+  matchScore: number;
+  scoreBreakdown: ScoreBreakdown;
+  matchedKeywords: MatchedKeyword[];
+  summary: string;
   upgrade_message: string;
-}
-
-interface KeywordMatch {
-  keyword: string;
-  found: boolean;
-  importance: "low" | "medium" | "high";
-  suggestion: string | null;
-}
-
-interface CVSection {
-  name: string;
-  score: number;
-  feedback: string;
-  suggestions: string[];
 }
 
 interface CoverLetterRequest {
@@ -426,8 +475,14 @@ export type {
   CompletenessStatus,
   CVAnalysisResult,
   CVAnalysisPreview,
-  KeywordMatch,
-  CVSection,
+  ScoreBreakdown,
+  MatchedKeyword,
+  MissingKeyword,
+  ExperienceAlignment,
+  TechnicalSkillsAnalysis,
+  SoftSkillsAnalysis,
+  AtsFormattingCheck,
+  OptimizationSuggestion,
   OptimizedCV,
   OptimizedCVSection,
   CoverLetterRequest,

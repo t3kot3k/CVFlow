@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 
@@ -8,33 +8,73 @@ class CVAnalysisRequest(BaseModel):
     job_description: str = Field(..., min_length=50, max_length=10000)
 
 
-class KeywordMatch(BaseModel):
-    """Schema for a keyword match result."""
+# ── New detailed ATS analysis models ─────────────────────────────────
+
+class MatchedKeyword(BaseModel):
     keyword: str
-    found: bool
-    importance: str = "medium"  # low, medium, high
-    suggestion: Optional[str] = None
+    context: str = ""
 
 
-class CVSection(BaseModel):
-    """Schema for a CV section analysis."""
-    name: str
-    score: int = Field(..., ge=0, le=100)
-    feedback: str
-    suggestions: list[str] = []
+class MissingKeyword(BaseModel):
+    keyword: str
+    importance: str = "Medium"  # High, Medium, Low
+    suggestion: str = ""
+
+
+class ScoreBreakdown(BaseModel):
+    skillsMatch: int = Field(0, ge=0, le=100)
+    experienceMatch: int = Field(0, ge=0, le=100)
+    educationMatch: int = Field(0, ge=0, le=100)
+    keywordsMatch: int = Field(0, ge=0, le=100)
+    overallRelevance: int = Field(0, ge=0, le=100)
+
+
+class ExperienceAlignment(BaseModel):
+    strongMatches: List[str] = []
+    partialMatches: List[str] = []
+    gaps: List[str] = []
+
+
+class TechnicalSkillsAnalysis(BaseModel):
+    alignedSkills: List[str] = []
+    missingCriticalSkills: List[str] = []
+    recommendedAdditions: List[str] = []
+
+
+class SoftSkillsAnalysis(BaseModel):
+    alignedSoftSkills: List[str] = []
+    missingSoftSkills: List[str] = []
+
+
+class AtsFormattingCheck(BaseModel):
+    formatScore: int = Field(0, ge=0, le=100)
+    issuesDetected: List[str] = []
+    recommendations: List[str] = []
+
+
+class OptimizationSuggestion(BaseModel):
+    priority: str = "Medium"  # High, Medium, Low
+    title: str = ""
+    description: str = ""
+    exampleRewrite: str = ""
 
 
 class CVAnalysisResult(BaseModel):
-    """Complete CV analysis result."""
+    """Complete detailed ATS analysis result."""
     id: Optional[str] = None
     user_id: Optional[str] = None
-    overall_score: int = Field(..., ge=0, le=100)
-    ats_compatibility: int = Field(..., ge=0, le=100)
-    keyword_matches: list[KeywordMatch] = []
-    missing_keywords: list[str] = []
-    sections: list[CVSection] = []
-    summary: str
-    improvement_tips: list[str] = []
+
+    matchScore: int = Field(0, ge=0, le=100)
+    scoreBreakdown: ScoreBreakdown = ScoreBreakdown()
+    matchedKeywords: List[MatchedKeyword] = []
+    missingKeywords: List[MissingKeyword] = []
+    experienceAlignment: ExperienceAlignment = ExperienceAlignment()
+    technicalSkillsAnalysis: TechnicalSkillsAnalysis = TechnicalSkillsAnalysis()
+    softSkillsAnalysis: SoftSkillsAnalysis = SoftSkillsAnalysis()
+    atsFormattingCheck: AtsFormattingCheck = AtsFormattingCheck()
+    optimizationSuggestions: List[OptimizationSuggestion] = []
+    summary: str = ""
+
     created_at: Optional[datetime] = None
 
     class Config:
@@ -42,10 +82,11 @@ class CVAnalysisResult(BaseModel):
 
 
 class CVAnalysisPreview(BaseModel):
-    """Partial CV analysis for free users (unauthenticated)."""
-    overall_score: int = Field(..., ge=0, le=100)
-    preview_keywords: list[KeywordMatch] = []  # Limited to 3
-    summary_preview: str  # Truncated summary
+    """Partial CV analysis for free / unauthenticated users."""
+    matchScore: int = Field(0, ge=0, le=100)
+    scoreBreakdown: ScoreBreakdown = ScoreBreakdown()
+    matchedKeywords: List[MatchedKeyword] = []  # limited to 3
+    summary: str = ""
     upgrade_message: str = "Create an account for the full analysis with all keywords, detailed section feedback, and personalized improvement tips."
 
 

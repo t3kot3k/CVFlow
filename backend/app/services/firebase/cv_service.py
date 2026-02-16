@@ -1,8 +1,19 @@
+from __future__ import annotations
 from google.cloud import firestore
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from app.core.firebase import get_firestore_client
-from app.schemas.cv import CVAnalysisResult
+from app.schemas.cv import (
+    CVAnalysisResult,
+    MatchedKeyword,
+    MissingKeyword,
+    ScoreBreakdown,
+    ExperienceAlignment,
+    TechnicalSkillsAnalysis,
+    SoftSkillsAnalysis,
+    AtsFormattingCheck,
+    OptimizationSuggestion,
+)
 
 
 class CVService:
@@ -21,13 +32,16 @@ class CVService:
 
         doc_data = {
             "userId": user_id,
-            "overallScore": analysis.overall_score,
-            "atsCompatibility": analysis.ats_compatibility,
-            "keywordMatches": [km.model_dump() for km in analysis.keyword_matches],
-            "missingKeywords": analysis.missing_keywords,
-            "sections": [s.model_dump() for s in analysis.sections],
+            "matchScore": analysis.matchScore,
+            "scoreBreakdown": analysis.scoreBreakdown.model_dump(),
+            "matchedKeywords": [mk.model_dump() for mk in analysis.matchedKeywords],
+            "missingKeywords": [mk.model_dump() for mk in analysis.missingKeywords],
+            "experienceAlignment": analysis.experienceAlignment.model_dump(),
+            "technicalSkillsAnalysis": analysis.technicalSkillsAnalysis.model_dump(),
+            "softSkillsAnalysis": analysis.softSkillsAnalysis.model_dump(),
+            "atsFormattingCheck": analysis.atsFormattingCheck.model_dump(),
+            "optimizationSuggestions": [s.model_dump() for s in analysis.optimizationSuggestions],
             "summary": analysis.summary,
-            "improvementTips": analysis.improvement_tips,
             "createdAt": firestore.SERVER_TIMESTAMP,
         }
 
@@ -83,20 +97,25 @@ class CVService:
 
     def _doc_to_analysis(self, doc_id: str, data: dict) -> CVAnalysisResult:
         """Convert Firestore document to CVAnalysisResult."""
-        from app.schemas.cv import KeywordMatch, CVSection
+        sb = data.get("scoreBreakdown", {})
+        ea = data.get("experienceAlignment", {})
+        ts = data.get("technicalSkillsAnalysis", {})
+        ss = data.get("softSkillsAnalysis", {})
+        fc = data.get("atsFormattingCheck", {})
 
         return CVAnalysisResult(
             id=doc_id,
             user_id=data.get("userId"),
-            overall_score=data.get("overallScore", 0),
-            ats_compatibility=data.get("atsCompatibility", 0),
-            keyword_matches=[
-                KeywordMatch(**km) for km in data.get("keywordMatches", [])
-            ],
-            missing_keywords=data.get("missingKeywords", []),
-            sections=[CVSection(**s) for s in data.get("sections", [])],
+            matchScore=data.get("matchScore", 0),
+            scoreBreakdown=ScoreBreakdown(**sb) if sb else ScoreBreakdown(),
+            matchedKeywords=[MatchedKeyword(**mk) for mk in data.get("matchedKeywords", [])],
+            missingKeywords=[MissingKeyword(**mk) for mk in data.get("missingKeywords", [])],
+            experienceAlignment=ExperienceAlignment(**ea) if ea else ExperienceAlignment(),
+            technicalSkillsAnalysis=TechnicalSkillsAnalysis(**ts) if ts else TechnicalSkillsAnalysis(),
+            softSkillsAnalysis=SoftSkillsAnalysis(**ss) if ss else SoftSkillsAnalysis(),
+            atsFormattingCheck=AtsFormattingCheck(**fc) if fc else AtsFormattingCheck(),
+            optimizationSuggestions=[OptimizationSuggestion(**s) for s in data.get("optimizationSuggestions", [])],
             summary=data.get("summary", ""),
-            improvement_tips=data.get("improvementTips", []),
             created_at=data.get("createdAt"),
         )
 

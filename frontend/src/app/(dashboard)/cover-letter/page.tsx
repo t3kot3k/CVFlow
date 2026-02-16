@@ -134,7 +134,7 @@ export default function CoverLetterPage() {
     setSubscribing(true);
     try {
       const response = await subscriptionApi.createCheckout(
-        `${window.location.origin}/dashboard/cover-letter?subscription=success`,
+        `${window.location.origin}/cover-letter?subscription=success`,
         window.location.href
       );
       window.location.href = response.checkout_url;

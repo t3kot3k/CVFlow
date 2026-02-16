@@ -7,11 +7,11 @@ import { useAuth } from "@/contexts/auth-context";
 
 const navItems = [
   { href: "/dashboard", icon: "dashboard", label: "Dashboard" },
-  { href: "/dashboard/cv-optimizer", icon: "description", label: "CV Optimizer" },
-  { href: "/dashboard/cover-letter", icon: "auto_fix_high", label: "Cover Letter" },
-  { href: "/dashboard/applications", icon: "outgoing_mail", label: "Applications" },
-  { href: "/dashboard/photo", icon: "portrait", label: "Photo Studio" },
-  { href: "/dashboard/settings", icon: "settings", label: "Settings" },
+  { href: "/cv-optimizer", icon: "description", label: "CV Optimizer" },
+  { href: "/cover-letter", icon: "auto_fix_high", label: "Cover Letter" },
+  { href: "/applications", icon: "outgoing_mail", label: "Applications" },
+  { href: "/photo", icon: "portrait", label: "Photo Studio" },
+  { href: "/settings", icon: "settings", label: "Settings" },
 ];
 
 export function Sidebar() {

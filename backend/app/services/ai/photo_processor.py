@@ -1,6 +1,12 @@
 import io
 from PIL import Image, ImageEnhance, ImageFilter
-from rembg import remove
+
+try:
+    from rembg import remove as rembg_remove
+    REMBG_AVAILABLE = True
+except ImportError:
+    REMBG_AVAILABLE = False
+    rembg_remove = None
 
 
 async def process_photo(
@@ -45,7 +51,7 @@ async def process_photo(
     enhanced = ImageEnhance.Contrast(enhanced).enhance(contrast)
     enhanced = ImageEnhance.Sharpness(enhanced).enhance(sharpness)
 
-    if background == "original":
+    if background == "original" or not REMBG_AVAILABLE:
         # No background removal — just return enhanced image
         return _to_jpeg_bytes(enhanced)
 
@@ -55,7 +61,7 @@ async def process_photo(
     enhanced_rgba.save(enhanced_bytes, format="PNG")
     enhanced_bytes.seek(0)
 
-    fg_bytes = remove(enhanced_bytes.getvalue())
+    fg_bytes = rembg_remove(enhanced_bytes.getvalue())
     foreground = Image.open(io.BytesIO(fg_bytes)).convert("RGBA")
 
     # Step 3: Create background
@@ -73,7 +79,7 @@ async def process_photo(
 
 def _create_background(
     background_style: str,
-    size: tuple[int, int],
+    size,
     original_rgb: Image.Image,
 ) -> Image.Image:
     """Create a background image based on the selected style."""

@@ -97,7 +97,7 @@ export default function PhotoPage() {
     setSubscribing(true);
     try {
       const response = await subscriptionApi.createCheckout(
-        `${window.location.origin}/dashboard/photo?subscription=success`,
+        `${window.location.origin}/photo?subscription=success`,
         window.location.href
       );
       window.location.href = response.checkout_url;

@@ -1,3 +1,6 @@
+from __future__ import annotations
+
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from fastapi.responses import Response
 from typing import Optional, Union, List
@@ -13,7 +16,10 @@ from app.schemas.cv import (
     CVAnalysisPreview,
     OptimizedCV,
     CVExportRequest,
+    MissingKeyword,
 )
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -39,7 +45,7 @@ async def analyze_cv_endpoint(
     if not is_valid:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=error,
+            detail=error or "Invalid file.",
         )
 
     # Extract text from CV
@@ -50,9 +56,16 @@ async def analyze_cv_endpoint(
             file.filename,
         )
     except ValueError as e:
+        logger.warning("File parsing failed: %s", e)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            detail=f"Unable to read CV file: {e}",
+        )
+    except Exception as e:
+        logger.exception("Unexpected error parsing file: %s", e)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Unable to read CV file. Please ensure it is a valid PDF or DOCX.",
         )
 
     if not cv_text.strip():
@@ -61,15 +74,68 @@ async def analyze_cv_endpoint(
             detail="Could not extract text from the CV. Please ensure the file is not empty or corrupted.",
         )
 
-    # Analyze CV
+    if len(cv_text.strip()) < 100:
+        logger.warning("CV text too short: %d chars", len(cv_text.strip()))
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Extracted CV text is too short ({len(cv_text.strip())} characters). "
+            "The file may be a scanned image or an empty document. "
+            "Please upload a text-based PDF or DOCX.",
+        )
+
+    logger.info(
+        "┌─ CV ANALYZE ENDPOINT – file=%s, cv_text_len=%d, job_desc_len=%d, user=%s",
+        file.filename,
+        len(cv_text),
+        len(job_description),
+        current_user.uid if current_user else "anonymous",
+    )
+
+    # Analyze CV — errors now propagate (no silent fallback)
     is_preview = current_user is None
-    analysis = await analyze_cv(cv_text, job_description, is_preview=is_preview)
+    try:
+        analysis = await analyze_cv(cv_text, job_description, is_preview=is_preview)
+    except ValueError as exc:
+        # Malformed input or parse failure
+        logger.error("Analysis ValueError: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Analysis failed: {exc}",
+        )
+    except TimeoutError as exc:
+        logger.error("Analysis timeout: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail=str(exc),
+        )
+    except RuntimeError as exc:
+        logger.error("Analysis runtime error: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"AI service error: {exc}",
+        )
+    except Exception as exc:
+        logger.exception("Analysis failed unexpectedly: %s", exc)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="AI analysis failed. Please retry in a moment.",
+        )
+
+    logger.info(
+        "└─ Analysis returned – matchScore=%d, preview=%s",
+        analysis.matchScore,
+        is_preview,
+    )
 
     # For authenticated users, save analysis
     if current_user and isinstance(analysis, CVAnalysisResult):
-        analysis_id = await cv_service.save_analysis(current_user.uid, analysis)
-        analysis.id = analysis_id
-        analysis.user_id = current_user.uid
+        try:
+            analysis_id = await cv_service.save_analysis(current_user.uid, analysis)
+            analysis.id = analysis_id
+            analysis.user_id = current_user.uid
+        except Exception as exc:
+            logger.exception("Failed to save analysis: %s", exc)
+            # Still return the analysis even if saving fails
 
     return analysis
 
@@ -167,7 +233,7 @@ async def optimize_cv_endpoint(
         analysis = await cv_service.get_analysis(current_user.uid, analysis_id)
         if analysis:
             analysis_summary = analysis.summary
-            missing_keywords = analysis.missing_keywords
+            missing_keywords = [mk.keyword for mk in analysis.missingKeywords]
 
     optimized = await optimize_cv(
         cv_text=cv_text,

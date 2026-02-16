@@ -1,6 +1,7 @@
+from __future__ import annotations
 from google.cloud import firestore
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 from app.core.firebase import get_firestore_client
 from app.schemas.cover_letter import (
     CoverLetterResponse,

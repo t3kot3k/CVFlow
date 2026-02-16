@@ -98,7 +98,7 @@ def validate_file(
     file_content: bytes,
     content_type: str,
     max_size_mb: int = 10,
-) -> tuple[bool, Optional[str]]:
+) -> "tuple[bool, Optional[str]]":
     """
     Validate a file for CV upload.
 

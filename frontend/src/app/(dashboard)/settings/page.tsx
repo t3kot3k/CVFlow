@@ -39,7 +39,7 @@ export default function SettingsPage() {
     setSubscribing(true);
     try {
       const response = await subscriptionApi.createCheckout(
-        `${window.location.origin}/dashboard/settings?subscription=success`,
+        `${window.location.origin}/settings?subscription=success`,
         window.location.href
       );
       window.location.href = response.checkout_url;

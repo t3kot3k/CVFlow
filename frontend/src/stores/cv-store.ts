@@ -1,15 +1,5 @@
 import { create } from "zustand";
-
-interface CVAnalysisResult {
-  id: string;
-  overall_score: number;
-  ats_compatibility: number;
-  keyword_matches: { keyword: string; found: boolean; importance: string; suggestion: string | null }[];
-  missing_keywords: string[];
-  sections: { name: string; score: number; feedback: string; suggestions: string[] }[];
-  summary: string;
-  improvement_tips: string[];
-}
+import type { CVAnalysisResult } from "@/lib/api/client";
 
 interface CVStore {
   jobTitle: string;

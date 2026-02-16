@@ -2,67 +2,135 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth-context";
 import { userApi } from "@/lib/api/client";
 import type { UserStats } from "@/lib/api/client";
 
+/* ------------------------------------------------------------------ */
+/*  AI Tips data                                                       */
+/* ------------------------------------------------------------------ */
 const aiTips = [
   {
-    category: "CV Optimization",
-    tip: "Ensure your skills section contains keywords directly from the job description for ATS.",
+    label: "CV Optimization",
+    color: "text-blue-600",
+    tip: "Include keywords directly from the job description in your skills section for better ATS matching.",
   },
   {
-    category: "Photography",
-    tip: "Use a neutral background for headshots to keep the focus on your professional presence.",
+    label: "Cover Letter",
+    color: "text-purple-600",
+    tip: "Address the hiring manager by name to show you've researched the company.",
   },
   {
-    category: "Cover Letters",
-    tip: "Address the hiring manager by name to show you've done your research.",
+    label: "Photo Tips",
+    color: "text-orange-500",
+    tip: "Use a neutral, uncluttered background for headshots to keep focus on your professional presence.",
   },
 ];
 
-const gettingStartedSteps = [
+/* ------------------------------------------------------------------ */
+/*  Mock recent assets (will be replaced with API data later)          */
+/* ------------------------------------------------------------------ */
+const recentAssets = [
   {
-    key: "has_cv" as const,
-    label: "Analyze your CV",
-    description: "Upload your CV and get ATS feedback",
-    href: "/dashboard/cv-optimizer",
-    icon: "analytics",
+    name: "Software_Engineer_CV.pdf",
+    type: "CV",
+    modified: "2 hours ago",
+    status: "Optimized" as const,
   },
   {
-    key: "has_letter" as const,
-    label: "Generate a cover letter",
-    description: "Create a personalized cover letter",
-    href: "/dashboard/cover-letter",
-    icon: "auto_fix_high",
+    name: "Cover_Letter_Google.docx",
+    type: "Cover Letter",
+    modified: "1 day ago",
+    status: "Optimized" as const,
   },
   {
-    key: "has_photo" as const,
-    label: "Enhance your photo",
-    description: "Get a professional AI headshot",
-    href: "/dashboard/photo",
-    icon: "portrait",
+    name: "PM_Resume_Draft.pdf",
+    type: "CV",
+    modified: "3 days ago",
+    status: "Draft" as const,
   },
   {
-    key: "has_application" as const,
-    label: "Track an application",
-    description: "Log your first job application",
-    href: "/dashboard/applications",
-    icon: "outgoing_mail",
+    name: "Amazon_Cover_Letter.docx",
+    type: "Cover Letter",
+    modified: "5 days ago",
+    status: "Draft" as const,
   },
 ];
 
+/* ------------------------------------------------------------------ */
+/*  Reusable sub-components                                            */
+/* ------------------------------------------------------------------ */
+
+function StatCard({
+  icon,
+  iconBg,
+  iconColor,
+  title,
+  value,
+  growth,
+  lastActivity,
+  loading,
+}: {
+  icon: string;
+  iconBg: string;
+  iconColor: string;
+  title: string;
+  value: number;
+  growth: string;
+  lastActivity: string;
+  loading: boolean;
+}) {
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+      <div className="flex items-start gap-4">
+        <div
+          className={`h-11 w-11 rounded-full flex items-center justify-center shrink-0 ${iconBg}`}
+        >
+          <span className={`material-symbols-outlined text-xl ${iconColor}`}>
+            {icon}
+          </span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+            {title}
+          </p>
+          <div className="flex items-baseline gap-2 mt-1">
+            <span className="text-2xl font-bold text-gray-900">
+              {loading ? "..." : value}
+            </span>
+            <span className="text-sm font-medium text-green-600">{growth}</span>
+          </div>
+        </div>
+      </div>
+      <p className="text-sm text-gray-400 mt-4">{lastActivity}</p>
+    </div>
+  );
+}
+
+function StatusBadge({ status }: { status: "Optimized" | "Draft" }) {
+  const classes =
+    status === "Optimized"
+      ? "bg-green-100 text-green-700"
+      : "bg-gray-100 text-gray-600";
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${classes}`}
+    >
+      {status}
+    </span>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Page                                                               */
+/* ------------------------------------------------------------------ */
 export default function DashboardPage() {
-  const { user, profile, isPremium, freeUsesRemaining } = useAuth();
+  const { user, profile } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
   const displayName =
-    profile?.displayName || user?.email?.split("@")[0] || "there";
+    profile?.displayName || user?.email?.split("@")[0] || "Alex";
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -70,7 +138,7 @@ export default function DashboardPage() {
         const data = await userApi.getStats();
         setStats(data);
       } catch {
-        // silently fail
+        /* silent */
       } finally {
         setLoadingStats(false);
       }
@@ -78,260 +146,219 @@ export default function DashboardPage() {
     fetchStats();
   }, []);
 
-  const completedCount = stats
-    ? [stats.completeness.has_cv, stats.completeness.has_photo, stats.completeness.has_letter, stats.completeness.has_application].filter(Boolean).length
-    : 0;
-
-  const allComplete = completedCount === 4;
+  /* Derive readiness score from completeness */
+  const completenessFlags = stats
+    ? [
+        stats.completeness.has_cv,
+        stats.completeness.has_letter,
+        stats.completeness.has_photo,
+        stats.completeness.has_application,
+      ]
+    : [];
+  const completedCount = completenessFlags.filter(Boolean).length;
+  const readinessScore = loadingStats ? 0 : Math.round((completedCount / 4) * 100);
+  const remaining = 100 - readinessScore;
 
   return (
-    <>
-      {/* Welcome */}
-      <div className="flex flex-wrap justify-between items-end gap-4">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-[#0e121b] dark:text-white text-3xl font-black tracking-tight">
+    <div className="space-y-8">
+      {/* ── 1. Page Header ──────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-900">
             Welcome back, {displayName}
           </h2>
-          <p className="text-[#4d6599] dark:text-gray-400 text-base">
-            Here&apos;s an overview of your job search progress.
+          <p className="text-gray-500 mt-1">
+            Here&apos;s an overview of your career optimization progress.
           </p>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/cv-optimizer">
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            Optimize CV
-          </Link>
-        </Button>
+        <Link
+          href="/cv-optimizer"
+          className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg px-4 py-2 transition-all duration-200"
+        >
+          <span className="material-symbols-outlined text-lg">add</span>
+          Create New Asset
+        </Link>
       </div>
 
-      {/* Row 1: Profile Completeness + Plan */}
+      {/* ── 2. Top Section: Readiness + Tips ────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Completeness */}
-        <Card className="lg:col-span-2">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-primary">task_alt</span>
-                <h3 className="text-lg font-bold">Profile Completeness</h3>
-              </div>
-              <span className="text-sm font-bold text-primary">{completedCount}/4</span>
-            </div>
+        {/* ── Job Readiness Score (col-span-2) ── */}
+        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+          {/* header */}
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-gray-900">
+              Job Readiness Score
+            </h3>
+            <span className="inline-flex items-center rounded-full bg-green-100 text-green-700 text-xs font-medium px-3 py-1">
+              {readinessScore >= 80
+                ? "Great Progress"
+                : readinessScore >= 50
+                  ? "Good Progress"
+                  : "Getting Started"}
+            </span>
+          </div>
 
-            {/* Progress bar */}
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-6">
-              <div
-                className="bg-primary h-2 rounded-full transition-all"
-                style={{ width: `${(completedCount / 4) * 100}%` }}
-              />
-            </div>
+          {/* score */}
+          <p className="text-4xl font-bold text-blue-600 mb-4">
+            {loadingStats ? "..." : `${readinessScore}%`}
+          </p>
 
-            {!allComplete ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {gettingStartedSteps.map((step) => {
-                  const isDone = stats?.completeness[step.key] ?? false;
-                  return (
-                    <Link
-                      key={step.key}
-                      href={step.href}
-                      className={cn(
-                        "p-3 rounded-lg border flex items-center gap-3 transition-colors",
-                        isDone
-                          ? "border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/10"
-                          : "border-gray-200 dark:border-gray-700 hover:border-primary/50"
-                      )}
-                    >
-                      <div className={cn(
-                        "size-9 rounded-full flex items-center justify-center flex-shrink-0",
-                        isDone
-                          ? "bg-green-100 dark:bg-green-900/30 text-green-600"
-                          : "bg-gray-100 dark:bg-gray-800 text-gray-400"
-                      )}>
-                        <span className="material-symbols-outlined text-lg">
-                          {isDone ? "check_circle" : step.icon}
-                        </span>
-                      </div>
-                      <div>
-                        <p className={cn("text-sm font-semibold", isDone && "line-through text-gray-400")}>
-                          {step.label}
-                        </p>
-                        <p className="text-xs text-gray-500">{step.description}</p>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/10 rounded-lg">
-                <span className="material-symbols-outlined text-green-600 text-2xl">celebration</span>
-                <p className="text-sm font-medium text-green-700 dark:text-green-300">
-                  All set! Your profile is complete. Keep optimizing for each new application.
+          {/* progress bar */}
+          <div className="w-full bg-gray-200 rounded-full h-3 mb-2">
+            <div
+              className="bg-blue-600 h-3 rounded-full transition-all duration-500"
+              style={{ width: `${readinessScore}%` }}
+            />
+          </div>
+          <p className="text-sm text-gray-500 mb-6">
+            {remaining}% to reaching 100%
+          </p>
+
+          {/* action row */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-500">Action needed</span>
+            <Link
+              href="/cv-optimizer"
+              className="text-sm font-medium text-blue-600 hover:underline"
+            >
+              Complete Setup
+            </Link>
+            <button
+              type="button"
+              className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+
+        {/* ── Quick AI Tips ── */}
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex flex-col">
+          <h3 className="text-lg font-semibold text-gray-900 mb-5">
+            Quick AI Tips
+          </h3>
+
+          <div className="flex-1 space-y-4">
+            {aiTips.map((tip, i) => (
+              <div key={i}>
+                <p
+                  className={`text-[11px] font-semibold uppercase tracking-wider mb-1 ${tip.color}`}
+                >
+                  {tip.label}
+                </p>
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {tip.tip}
                 </p>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            ))}
+          </div>
 
-        {/* Plan Card */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-4 mb-4">
-              <div
-                className={cn(
-                  "size-12 rounded-full flex items-center justify-center",
-                  isPremium
-                    ? "bg-purple-100 dark:bg-purple-900/20 text-purple-600"
-                    : "bg-blue-100 dark:bg-blue-900/20 text-primary"
-                )}
-              >
-                <span
-                  className="material-symbols-outlined text-[28px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  {isPremium ? "workspace_premium" : "shield"}
-                </span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-[#4d6599]">Plan</p>
-                <div className="flex items-center gap-2">
-                  <p className="text-xl font-black">{isPremium ? "Pro" : "Free"}</p>
-                  {isPremium && <Badge variant="success">Active</Badge>}
-                </div>
-              </div>
-            </div>
-            {isPremium ? (
-              <p className="text-sm text-[#4d6599] mb-3">Unlimited AI features</p>
-            ) : (
-              <p className="text-sm text-[#4d6599] mb-3">
-                {freeUsesRemaining} free AI use{freeUsesRemaining !== 1 ? "s" : ""} remaining
-              </p>
-            )}
-            {!isPremium ? (
-              <Button className="w-full" asChild>
-                <Link href="/pricing">Upgrade to Pro</Link>
-              </Button>
-            ) : (
-              <Button variant="outline" className="w-full" asChild>
-                <Link href="/dashboard/settings#subscription">Manage</Link>
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <Link
+              href="/cv-optimizer"
+              className="w-full inline-flex justify-center items-center gap-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 px-4 py-2 transition-all duration-200"
+            >
+              View All Insights
+            </Link>
+          </div>
+        </div>
       </div>
 
-      {/* Row 2: Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          {
-            label: "CVs Analyzed",
-            value: stats?.cv_count ?? 0,
-            icon: "analytics",
-            color: "text-blue-600 bg-blue-100 dark:bg-blue-900/20",
-          },
-          {
-            label: "Cover Letters",
-            value: stats?.letter_count ?? 0,
-            icon: "auto_fix_high",
-            color: "text-purple-600 bg-purple-100 dark:bg-purple-900/20",
-          },
-          {
-            label: "Applications",
-            value: stats?.application_count ?? 0,
-            icon: "outgoing_mail",
-            color: "text-orange-600 bg-orange-100 dark:bg-orange-900/20",
-          },
-          {
-            label: "Latest ATS Score",
-            value: stats?.latest_cv_score != null ? `${stats.latest_cv_score}%` : "—",
-            icon: "speed",
-            color: "text-green-600 bg-green-100 dark:bg-green-900/20",
-          },
-        ].map((card) => (
-          <Card key={card.label}>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3">
-                <div className={cn("size-10 rounded-lg flex items-center justify-center", card.color)}>
-                  <span className="material-symbols-outlined">{card.icon}</span>
-                </div>
-                <div>
-                  <p className="text-xs text-gray-500 font-medium">{card.label}</p>
-                  <p className="text-2xl font-black">
-                    {loadingStats ? "..." : card.value}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      {/* ── 3. Middle Section: Quick Stats ──────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <StatCard
+          icon="description"
+          iconBg="bg-blue-100"
+          iconColor="text-blue-600"
+          title="Total CVs Optimized"
+          value={stats?.cv_count ?? 0}
+          growth={`+${stats?.cv_count ? Math.min(stats.cv_count, 2) : 0}`}
+          lastActivity="Last activity: 2 hours ago"
+          loading={loadingStats}
+        />
+        <StatCard
+          icon="auto_fix_high"
+          iconBg="bg-purple-100"
+          iconColor="text-purple-600"
+          title="Cover Letters Generated"
+          value={stats?.letter_count ?? 0}
+          growth={`+${stats?.letter_count ? Math.min(stats.letter_count, 1) : 0}`}
+          lastActivity="Last activity: 1 day ago"
+          loading={loadingStats}
+        />
       </div>
 
-      {/* Row 3: Quick Actions + AI Tips */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quick Actions */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span
-                className="material-symbols-outlined text-primary text-[28px]"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                rocket_launch
-              </span>
-              <h3 className="text-lg font-bold">Quick Actions</h3>
-            </div>
-            <div className="space-y-3">
-              <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                <Link href="/dashboard/cv-optimizer">
-                  <span className="material-symbols-outlined text-sm">analytics</span>
-                  Analyze CV with ATS
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                <Link href="/dashboard/cover-letter">
-                  <span className="material-symbols-outlined text-sm">auto_fix_high</span>
-                  Generate Cover Letter
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                <Link href="/dashboard/photo">
-                  <span className="material-symbols-outlined text-sm">portrait</span>
-                  AI Headshot
-                </Link>
-              </Button>
-              <Button variant="outline" className="w-full justify-start gap-2" asChild>
-                <Link href="/dashboard/applications">
-                  <span className="material-symbols-outlined text-sm">outgoing_mail</span>
-                  Track Application
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      {/* ── 4. Bottom Section: Recent Assets Table ──────────────── */}
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        {/* header */}
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Recent Assets
+          </h3>
+          <Link
+            href="/cv-optimizer"
+            className="text-sm font-medium text-blue-600 hover:underline"
+          >
+            View All
+          </Link>
+        </div>
 
-        {/* AI Insights */}
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-primary">lightbulb</span>
-              <h3 className="text-lg font-bold">Quick AI Tips</h3>
-            </div>
-            <div className="space-y-4 overflow-y-auto max-h-[200px] pr-2 custom-scrollbar">
-              {aiTips.map((tip, index) => (
-                <div
-                  key={index}
-                  className="p-3 rounded-lg bg-background-light dark:bg-gray-800/50 border border-transparent hover:border-primary/20 transition-all"
-                >
-                  <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
-                    {tip.category}
-                  </p>
-                  <p className="text-sm text-[#0e121b] dark:text-gray-200 font-medium leading-snug">
-                    {tip.tip}
-                  </p>
-                </div>
+        {/* table */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-200">
+                <th className="text-left text-xs font-medium uppercase text-gray-500 pb-3 pr-4">
+                  Asset Name
+                </th>
+                <th className="text-left text-xs font-medium uppercase text-gray-500 pb-3 pr-4">
+                  Type
+                </th>
+                <th className="text-left text-xs font-medium uppercase text-gray-500 pb-3 pr-4">
+                  Last Modified
+                </th>
+                <th className="text-left text-xs font-medium uppercase text-gray-500 pb-3 pr-4">
+                  Status
+                </th>
+                <th className="text-left text-xs font-medium uppercase text-gray-500 pb-3">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {recentAssets.map((asset, i) => (
+                <tr key={i} className="hover:bg-gray-50 transition-colors">
+                  <td className="py-3 pr-4">
+                    <div className="flex items-center gap-3">
+                      <span className="material-symbols-outlined text-gray-400 text-lg">
+                        {asset.name.endsWith(".pdf")
+                          ? "picture_as_pdf"
+                          : "article"}
+                      </span>
+                      <span className="font-medium text-gray-900">
+                        {asset.name}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="py-3 pr-4 text-gray-700">{asset.type}</td>
+                  <td className="py-3 pr-4 text-gray-500">{asset.modified}</td>
+                  <td className="py-3 pr-4">
+                    <StatusBadge status={asset.status} />
+                  </td>
+                  <td className="py-3">
+                    <Link
+                      href="/cv-optimizer"
+                      className="text-sm font-medium text-blue-600 hover:underline"
+                    >
+                      View
+                    </Link>
+                  </td>
+                </tr>
               ))}
-            </div>
-          </CardContent>
-        </Card>
+            </tbody>
+          </table>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

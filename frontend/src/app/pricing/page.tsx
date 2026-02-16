@@ -124,7 +124,7 @@ function PricingContent() {
 
             <Button
               className="w-full h-12"
-              onClick={() => router.push("/dashboard/settings#subscription")}
+              onClick={() => router.push("/settings#subscription")}
             >
               Upgrade to Pro
             </Button>
