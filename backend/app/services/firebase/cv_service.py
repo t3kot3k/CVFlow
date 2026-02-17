@@ -1,124 +1,96 @@
-from __future__ import annotations
-from google.cloud import firestore
 from datetime import datetime
-from typing import Optional, List
-from app.core.firebase import get_firestore_client
-from app.schemas.cv import (
-    CVAnalysisResult,
-    MatchedKeyword,
-    MissingKeyword,
-    ScoreBreakdown,
-    ExperienceAlignment,
-    TechnicalSkillsAnalysis,
-    SoftSkillsAnalysis,
-    AtsFormattingCheck,
-    OptimizationSuggestion,
-)
+
+from app.core.firebase import get_db
 
 
-class CVService:
-    """Service for managing CV data in Firestore."""
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-    USERS_COLLECTION = "users"
-    CV_ANALYSES_SUBCOLLECTION = "cv_analyses"
-
-    def __init__(self):
-        self.db = get_firestore_client()
-
-    async def save_analysis(self, user_id: str, analysis: CVAnalysisResult) -> str:
-        """Save a CV analysis result to Firestore."""
-        user_ref = self.db.collection(self.USERS_COLLECTION).document(user_id)
-        analyses_ref = user_ref.collection(self.CV_ANALYSES_SUBCOLLECTION)
-
-        doc_data = {
-            "userId": user_id,
-            "matchScore": analysis.matchScore,
-            "scoreBreakdown": analysis.scoreBreakdown.model_dump(),
-            "matchedKeywords": [mk.model_dump() for mk in analysis.matchedKeywords],
-            "missingKeywords": [mk.model_dump() for mk in analysis.missingKeywords],
-            "experienceAlignment": analysis.experienceAlignment.model_dump(),
-            "technicalSkillsAnalysis": analysis.technicalSkillsAnalysis.model_dump(),
-            "softSkillsAnalysis": analysis.softSkillsAnalysis.model_dump(),
-            "atsFormattingCheck": analysis.atsFormattingCheck.model_dump(),
-            "optimizationSuggestions": [s.model_dump() for s in analysis.optimizationSuggestions],
-            "summary": analysis.summary,
-            "createdAt": firestore.SERVER_TIMESTAMP,
-        }
-
-        doc_ref = analyses_ref.add(doc_data)
-        return doc_ref[1].id
-
-    async def get_analysis(self, user_id: str, analysis_id: str) -> Optional[CVAnalysisResult]:
-        """Get a specific CV analysis by ID."""
-        doc_ref = (
-            self.db.collection(self.USERS_COLLECTION)
-            .document(user_id)
-            .collection(self.CV_ANALYSES_SUBCOLLECTION)
-            .document(analysis_id)
-        )
-        doc = doc_ref.get()
-
-        if not doc.exists:
-            return None
-
-        data = doc.to_dict()
-        return self._doc_to_analysis(doc.id, data)
-
-    async def get_user_analyses(
-        self, user_id: str, limit: int = 10
-    ) -> list[CVAnalysisResult]:
-        """Get all CV analyses for a user."""
-        analyses_ref = (
-            self.db.collection(self.USERS_COLLECTION)
-            .document(user_id)
-            .collection(self.CV_ANALYSES_SUBCOLLECTION)
-            .order_by("createdAt", direction=firestore.Query.DESCENDING)
-            .limit(limit)
-        )
-
-        docs = analyses_ref.stream()
-        return [self._doc_to_analysis(doc.id, doc.to_dict()) for doc in docs]
-
-    async def delete_analysis(self, user_id: str, analysis_id: str) -> bool:
-        """Delete a CV analysis."""
-        doc_ref = (
-            self.db.collection(self.USERS_COLLECTION)
-            .document(user_id)
-            .collection(self.CV_ANALYSES_SUBCOLLECTION)
-            .document(analysis_id)
-        )
-        doc = doc_ref.get()
-
-        if not doc.exists:
-            return False
-
-        doc_ref.delete()
-        return True
-
-    def _doc_to_analysis(self, doc_id: str, data: dict) -> CVAnalysisResult:
-        """Convert Firestore document to CVAnalysisResult."""
-        sb = data.get("scoreBreakdown", {})
-        ea = data.get("experienceAlignment", {})
-        ts = data.get("technicalSkillsAnalysis", {})
-        ss = data.get("softSkillsAnalysis", {})
-        fc = data.get("atsFormattingCheck", {})
-
-        return CVAnalysisResult(
-            id=doc_id,
-            user_id=data.get("userId"),
-            matchScore=data.get("matchScore", 0),
-            scoreBreakdown=ScoreBreakdown(**sb) if sb else ScoreBreakdown(),
-            matchedKeywords=[MatchedKeyword(**mk) for mk in data.get("matchedKeywords", [])],
-            missingKeywords=[MissingKeyword(**mk) for mk in data.get("missingKeywords", [])],
-            experienceAlignment=ExperienceAlignment(**ea) if ea else ExperienceAlignment(),
-            technicalSkillsAnalysis=TechnicalSkillsAnalysis(**ts) if ts else TechnicalSkillsAnalysis(),
-            softSkillsAnalysis=SoftSkillsAnalysis(**ss) if ss else SoftSkillsAnalysis(),
-            atsFormattingCheck=AtsFormattingCheck(**fc) if fc else AtsFormattingCheck(),
-            optimizationSuggestions=[OptimizationSuggestion(**s) for s in data.get("optimizationSuggestions", [])],
-            summary=data.get("summary", ""),
-            created_at=data.get("createdAt"),
-        )
+def _cvs_col(uid: str):
+    return get_db().collection("users").document(uid).collection("cvs")
 
 
-# Singleton instance
-cv_service = CVService()
+def _cv_ref(uid: str, cv_id: str):
+    return _cvs_col(uid).document(cv_id)
+
+
+# ---------------------------------------------------------------------------
+# CRUD
+# ---------------------------------------------------------------------------
+
+def list_cvs(uid: str) -> list[dict]:
+    """Return every CV document for the given user, ordered by update time."""
+    docs = (
+        _cvs_col(uid)
+        .order_by("updated_at", direction="DESCENDING")
+        .stream()
+    )
+    results = []
+    for doc in docs:
+        item = doc.to_dict()
+        item["id"] = doc.id
+        results.append(item)
+    return results
+
+
+def get_cv(uid: str, cv_id: str) -> dict | None:
+    """Return a single CV document or None."""
+    doc = _cv_ref(uid, cv_id).get()
+    if not doc.exists:
+        return None
+    data = doc.to_dict()
+    data["id"] = doc.id
+    return data
+
+
+def create_cv(uid: str, data: dict) -> dict:
+    """Create a new CV document.  Returns the data including the generated id."""
+    now = datetime.utcnow().isoformat()
+    payload = {
+        **data,
+        "uid": uid,
+        "created_at": now,
+        "updated_at": now,
+    }
+    _, ref = _cvs_col(uid).add(payload)
+    payload["id"] = ref.id
+    return payload
+
+
+def update_cv(uid: str, cv_id: str, data: dict) -> dict | None:
+    """Update a CV document.  Returns merged data or None if not found."""
+    ref = _cv_ref(uid, cv_id)
+    doc = ref.get()
+    if not doc.exists:
+        return None
+    data["updated_at"] = datetime.utcnow().isoformat()
+    ref.update(data)
+    merged = {**doc.to_dict(), **data, "id": doc.id}
+    return merged
+
+
+def delete_cv(uid: str, cv_id: str) -> bool:
+    """Delete a CV document.  Returns True if it existed."""
+    ref = _cv_ref(uid, cv_id)
+    doc = ref.get()
+    if not doc.exists:
+        return False
+    ref.delete()
+    return True
+
+
+def duplicate_cv(uid: str, cv_id: str) -> dict | None:
+    """Duplicate an existing CV with a new id and fresh timestamps.
+
+    Returns the new CV dict or None if the source does not exist.
+    """
+    source = get_cv(uid, cv_id)
+    if source is None:
+        return None
+
+    # Remove identifiers that belong to the original
+    copy_data = {k: v for k, v in source.items() if k not in ("id", "created_at", "updated_at")}
+    copy_data["duplicated_from"] = cv_id
+
+    return create_cv(uid, copy_data)

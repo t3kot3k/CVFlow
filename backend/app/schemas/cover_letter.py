@@ -1,45 +1,42 @@
-from pydantic import BaseModel, Field
-from typing import Optional, Literal
-from datetime import datetime
+from pydantic import BaseModel
+from typing import List, Optional
 
 
-class CoverLetterRequest(BaseModel):
-    """Request schema for cover letter generation."""
-    job_title: str = Field(..., min_length=2, max_length=200)
-    company_name: str = Field(..., min_length=2, max_length=200)
-    job_description: str = Field(..., min_length=50, max_length=10000)
-    tone: Literal["classic", "startup", "corporate"] = "classic"
-    additional_context: Optional[str] = Field(None, max_length=2000)
+class CoverLetterGenerateRequest(BaseModel):
+    cv_id: str
+    job_description: str
+    tone: str = "professional"  # professional, enthusiastic, concise, creative
+    format: str = "us"  # us, french, international
+    language: str = "en"
+    custom_instructions: Optional[str] = None
 
 
-class CoverLetterResponse(BaseModel):
-    """Response schema for generated cover letter."""
-    id: Optional[str] = None
-    user_id: Optional[str] = None
-    job_title: str
-    company_name: str
-    tone: str
-    content: str
-    word_count: int
-    created_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True
+class CoverLetterRewriteRequest(BaseModel):
+    paragraph_index: int
+    current_text: str
+    tone: str = "professional"
+    instructions: Optional[str] = None
 
 
-class CoverLetterUpdate(BaseModel):
-    """Schema for updating a cover letter."""
-    content: str = Field(..., min_length=100, max_length=10000)
-
-
-class CoverLetterListItem(BaseModel):
-    """Schema for cover letter list item."""
+class CoverLetterVersion(BaseModel):
     id: str
-    job_title: str
-    company_name: str
     tone: str
-    word_count: int
-    created_at: datetime
+    created_at: str
 
-    class Config:
-        from_attributes = True
+
+class CoverLetterContent(BaseModel):
+    id: Optional[str] = None
+    cv_id: str
+    paragraphs: List[str]
+    tone: str
+    format: str
+    language: str
+    word_count: int
+    created_at: Optional[str] = None
+
+
+class CoverLetterDownloadRequest(BaseModel):
+    paragraphs: List[str]
+    format: str = "pdf"  # pdf, docx
+    tone: str = "professional"
+    letter_format: str = "us"

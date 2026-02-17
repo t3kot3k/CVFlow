@@ -1,261 +1,227 @@
-from __future__ import annotations
+"""CV CRUD endpoints: list, create, get, update, delete, duplicate, auto-save, preview."""
 
-import logging
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import Response
-from typing import Optional, Union, List
-from app.core.security import get_current_user, get_optional_user, CurrentUser
-from app.services.firebase import user_service, cv_service
-from app.services.firebase.usage_gate import authorize_ai_feature
-from app.services.ai import analyze_cv, optimize_cv
-from app.utils.document_parser import extract_text_from_file, validate_file
-from app.utils.pdf_generator import generate_cv_pdf
-from app.schemas.cv import (
-    CVAnalysisRequest,
-    CVAnalysisResult,
-    CVAnalysisPreview,
-    OptimizedCV,
-    CVExportRequest,
-    MissingKeyword,
-)
+from typing import List
 
-logger = logging.getLogger(__name__)
+from app.core.security import get_current_user
+from app.schemas.cv import (
+    CVCreate,
+    CVUpdate,
+    CVSummary,
+    CVDetail,
+    CVContent,
+)
 
 router = APIRouter()
 
 
-@router.post("/analyze", response_model=Union[CVAnalysisResult, CVAnalysisPreview])
-async def analyze_cv_endpoint(
-    file: UploadFile = File(...),
-    job_description: str = Form(..., min_length=50),
-    current_user: Optional[CurrentUser] = Depends(get_optional_user),
-):
-    """
-    Analyze a CV against a job description.
-
-    For authenticated users: Returns full analysis and saves to history.
-    For unauthenticated users: Returns limited preview.
-    ATS analysis is always free — no usage gate.
-    """
-    # Read file content
-    file_content = await file.read()
-
-    # Validate file
-    is_valid, error = validate_file(file_content, file.content_type or "")
-    if not is_valid:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=error or "Invalid file.",
-        )
-
-    # Extract text from CV
+@router.get("/", response_model=List[CVSummary])
+async def list_cvs(user: dict = Depends(get_current_user)):
+    """List all CVs for the current user."""
     try:
-        cv_text = extract_text_from_file(
-            file_content,
-            file.content_type or "",
-            file.filename,
-        )
-    except ValueError as e:
-        logger.warning("File parsing failed: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unable to read CV file: {e}",
-        )
-    except Exception as e:
-        logger.exception("Unexpected error parsing file: %s", e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Unable to read CV file. Please ensure it is a valid PDF or DOCX.",
-        )
+        from app.services.firebase.cv_service import list_cvs as _list_cvs
 
-    if not cv_text.strip():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Could not extract text from the CV. Please ensure the file is not empty or corrupted.",
-        )
-
-    if len(cv_text.strip()) < 100:
-        logger.warning("CV text too short: %d chars", len(cv_text.strip()))
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Extracted CV text is too short ({len(cv_text.strip())} characters). "
-            "The file may be a scanned image or an empty document. "
-            "Please upload a text-based PDF or DOCX.",
-        )
-
-    logger.info(
-        "┌─ CV ANALYZE ENDPOINT – file=%s, cv_text_len=%d, job_desc_len=%d, user=%s",
-        file.filename,
-        len(cv_text),
-        len(job_description),
-        current_user.uid if current_user else "anonymous",
-    )
-
-    # Analyze CV — errors now propagate (no silent fallback)
-    is_preview = current_user is None
-    try:
-        analysis = await analyze_cv(cv_text, job_description, is_preview=is_preview)
-    except ValueError as exc:
-        # Malformed input or parse failure
-        logger.error("Analysis ValueError: %s", exc)
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Analysis failed: {exc}",
-        )
-    except TimeoutError as exc:
-        logger.error("Analysis timeout: %s", exc)
-        raise HTTPException(
-            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
-            detail=str(exc),
-        )
-    except RuntimeError as exc:
-        logger.error("Analysis runtime error: %s", exc)
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"AI service error: {exc}",
-        )
+        cvs = _list_cvs(user["uid"])
+        return cvs
     except Exception as exc:
-        logger.exception("Analysis failed unexpectedly: %s", exc)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="AI analysis failed. Please retry in a moment.",
+            detail=f"Failed to list CVs: {exc}",
         )
 
-    logger.info(
-        "└─ Analysis returned – matchScore=%d, preview=%s",
-        analysis.matchScore,
-        is_preview,
-    )
 
-    # For authenticated users, save analysis
-    if current_user and isinstance(analysis, CVAnalysisResult):
-        try:
-            analysis_id = await cv_service.save_analysis(current_user.uid, analysis)
-            analysis.id = analysis_id
-            analysis.user_id = current_user.uid
-        except Exception as exc:
-            logger.exception("Failed to save analysis: %s", exc)
-            # Still return the analysis even if saving fails
-
-    return analysis
-
-
-@router.get("/analyses", response_model=List[CVAnalysisResult])
-async def get_user_analyses(
-    limit: int = 10,
-    current_user: CurrentUser = Depends(get_current_user),
+@router.post("/", response_model=CVDetail, status_code=status.HTTP_201_CREATED)
+async def create_cv(
+    body: CVCreate,
+    user: dict = Depends(get_current_user),
 ):
-    """Get the current user's CV analysis history."""
-    analyses = await cv_service.get_user_analyses(current_user.uid, limit)
-    return analyses
-
-
-@router.get("/analyses/{analysis_id}", response_model=CVAnalysisResult)
-async def get_analysis(
-    analysis_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    """Get a specific CV analysis by ID."""
-    analysis = await cv_service.get_analysis(current_user.uid, analysis_id)
-
-    if not analysis:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Analysis not found",
-        )
-
-    return analysis
-
-
-@router.delete("/analyses/{analysis_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_analysis(
-    analysis_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    """Delete a CV analysis."""
-    deleted = await cv_service.delete_analysis(current_user.uid, analysis_id)
-
-    if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Analysis not found",
-        )
-
-    return None
-
-
-@router.post("/optimize", response_model=OptimizedCV)
-async def optimize_cv_endpoint(
-    file: UploadFile = File(...),
-    job_description: str = Form(..., min_length=50),
-    analysis_id: Optional[str] = Form(None),
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    """
-    Generate an AI-optimized version of a CV.
-    This is a premium AI feature (uses free uses or requires Pro plan).
-    """
-    # Usage gate — counts as an AI use
-    user = await user_service.get_user(current_user.uid)
-    plan = user.plan if user else "free"
-    await authorize_ai_feature(current_user.uid, plan)
-
-    # Read and validate file
-    file_content = await file.read()
-    is_valid, error = validate_file(file_content, file.content_type or "")
-    if not is_valid:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=error,
-        )
-
-    # Extract text
+    """Create a new CV."""
     try:
-        cv_text = extract_text_from_file(
-            file_content, file.content_type or "", file.filename
-        )
-    except ValueError as e:
+        from app.services.firebase.cv_service import create_cv as _create_cv
+
+        cv_data = {
+            "title": body.title,
+            "template_id": body.template_id,
+            "content": CVContent().model_dump(),
+            "status": "draft",
+        }
+        cv = _create_cv(user["uid"], cv_data)
+        return cv
+    except Exception as exc:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create CV: {exc}",
         )
 
-    if not cv_text.strip():
+
+@router.get("/{cv_id}", response_model=CVDetail)
+async def get_cv(cv_id: str, user: dict = Depends(get_current_user)):
+    """Get a specific CV by ID."""
+    try:
+        from app.services.firebase.cv_service import get_cv as _get_cv
+
+        cv = _get_cv(user["uid"], cv_id)
+        if cv is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="CV not found",
+            )
+        return cv
+    except HTTPException:
+        raise
+    except Exception as exc:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Could not extract text from the CV.",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get CV: {exc}",
         )
 
-    # Optionally load prior analysis for context
-    analysis_summary = ""
-    missing_keywords: list[str] = []
-    if analysis_id:
-        analysis = await cv_service.get_analysis(current_user.uid, analysis_id)
-        if analysis:
-            analysis_summary = analysis.summary
-            missing_keywords = [mk.keyword for mk in analysis.missingKeywords]
 
-    optimized = await optimize_cv(
-        cv_text=cv_text,
-        job_description=job_description,
-        analysis_summary=analysis_summary,
-        missing_keywords=missing_keywords,
-    )
-
-    return optimized
-
-
-@router.post("/export")
-async def export_cv_pdf(
-    data: CVExportRequest,
-    cv: OptimizedCV,
-    current_user: CurrentUser = Depends(get_current_user),
+@router.put("/{cv_id}", response_model=CVDetail)
+async def update_cv(
+    cv_id: str,
+    body: CVUpdate,
+    user: dict = Depends(get_current_user),
 ):
-    """Export optimized CV as an ATS-friendly PDF."""
-    pdf_bytes = generate_cv_pdf(cv, template=data.template)
+    """Update a CV."""
+    try:
+        from app.services.firebase.cv_service import update_cv as _update_cv
 
-    return Response(
-        content=pdf_bytes,
-        media_type="application/pdf",
-        headers={"Content-Disposition": "attachment; filename=optimized_cv.pdf"},
-    )
+        update_data = body.model_dump(exclude_none=True)
+        if "content" in update_data and update_data["content"] is not None:
+            # Ensure content is serialized as a dict
+            update_data["content"] = (
+                body.content.model_dump() if body.content else update_data["content"]
+            )
+
+        if not update_data:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="No fields to update",
+            )
+
+        cv = _update_cv(user["uid"], cv_id, update_data)
+        if cv is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="CV not found",
+            )
+        return cv
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to update CV: {exc}",
+        )
+
+
+@router.delete("/{cv_id}", status_code=status.HTTP_200_OK)
+async def delete_cv(cv_id: str, user: dict = Depends(get_current_user)):
+    """Delete a CV."""
+    try:
+        from app.services.firebase.cv_service import delete_cv as _delete_cv
+
+        deleted = _delete_cv(user["uid"], cv_id)
+        if not deleted:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="CV not found",
+            )
+        return {"message": "CV deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to delete CV: {exc}",
+        )
+
+
+@router.post("/{cv_id}/duplicate", response_model=CVDetail, status_code=status.HTTP_201_CREATED)
+async def duplicate_cv(cv_id: str, user: dict = Depends(get_current_user)):
+    """Duplicate an existing CV."""
+    try:
+        from app.services.firebase.cv_service import duplicate_cv as _duplicate_cv
+
+        new_cv = _duplicate_cv(user["uid"], cv_id)
+        if new_cv is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Source CV not found",
+            )
+        return new_cv
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to duplicate CV: {exc}",
+        )
+
+
+@router.post("/{cv_id}/auto-save", status_code=status.HTTP_200_OK)
+async def auto_save_cv(
+    cv_id: str,
+    body: CVContent,
+    user: dict = Depends(get_current_user),
+):
+    """Auto-save CV content (lightweight update for the content field only)."""
+    try:
+        from app.services.firebase.cv_service import update_cv as _update_cv
+
+        update_data = {"content": body.model_dump()}
+        cv = _update_cv(user["uid"], cv_id, update_data)
+        if cv is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="CV not found",
+            )
+        return {"message": "Auto-saved successfully", "updated_at": cv.get("updated_at")}
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to auto-save CV: {exc}",
+        )
+
+
+@router.get("/{cv_id}/preview")
+async def preview_cv(cv_id: str, user: dict = Depends(get_current_user)):
+    """Get a PDF preview of the CV."""
+    try:
+        from app.services.firebase.cv_service import get_cv as _get_cv
+
+        cv = _get_cv(user["uid"], cv_id)
+        if cv is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="CV not found",
+            )
+
+        # Try to generate PDF preview
+        try:
+            from app.services.pdf.generator import generate_cv_pdf
+
+            pdf_bytes = await generate_cv_pdf(cv)
+            return Response(
+                content=pdf_bytes,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": f'inline; filename="{cv.get("title", "cv")}.pdf"',
+                },
+            )
+        except ImportError:
+            # PDF generator not yet implemented
+            raise HTTPException(
+                status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                detail="PDF preview generation is not yet available",
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate preview: {exc}",
+        )

@@ -1,7 +1,7 @@
 @echo off
-title Recruit AI - Stop
+title CVFlow - Stop
 echo ============================================
-echo         RECRUIT AI - Stopping Project
+echo           CVFlow - Stopping Project
 echo ============================================
 echo.
 
@@ -18,7 +18,7 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8066 ^| findstr LISTENING') 
 )
 
 :: Also kill by window title
-taskkill /FI "WINDOWTITLE eq Recruit-AI-Backend*" /F >nul 2>&1
+taskkill /FI "WINDOWTITLE eq CVFlow-Backend*" /F >nul 2>&1
 
 :: Kill processes on port 3066 (Frontend)
 echo [2/2] Stopping Frontend (port 3066)...
@@ -31,11 +31,11 @@ for /f "tokens=5" %%a in ('netstat -ano ^| findstr :3066 ^| findstr LISTENING') 
 )
 
 :: Also kill by window title
-taskkill /FI "WINDOWTITLE eq Recruit-AI-Frontend*" /F >nul 2>&1
+taskkill /FI "WINDOWTITLE eq CVFlow-Frontend*" /F >nul 2>&1
 
 echo.
 echo ============================================
-echo       RECRUIT AI - Stopped Successfully
+echo        CVFlow - Stopped Successfully
 echo ============================================
 echo.
 echo   Port 8066 (Backend): Freed

@@ -1,122 +1,94 @@
+"""
+Gemini AI client wrapper for CVFlow.
+
+Provides async helper functions to call Google Gemini for both free-text
+and structured-JSON generation.
+"""
+
 from __future__ import annotations
 
-import asyncio
+import json
 import logging
-from typing import Optional
+import re
+from typing import Any
 
 from google import genai
+from google.genai import types
 
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-_client: Optional[genai.Client] = None
+# ---------------------------------------------------------------------------
+# Client initialisation
+# ---------------------------------------------------------------------------
 
-# Timeout for Gemini calls (seconds)
-GEMINI_TIMEOUT = 120
-
-
-def _get_client() -> genai.Client:
-    """Get or initialize the Gemini client (new google-genai SDK)."""
-    global _client
-
-    if _client is None:
-        api_key = settings.GEMINI_API_KEY
-        if not api_key or api_key.startswith("your_") or len(api_key) < 10:
-            raise RuntimeError(
-                "GEMINI_API_KEY is missing or invalid. "
-                "Set it in backend/.env"
-            )
-        _client = genai.Client(api_key=api_key)
-        logger.info("Gemini client initialised – model: %s", settings.GEMINI_MODEL)
-
-    return _client
+client = genai.Client(api_key=settings.GEMINI_API_KEY)
 
 
-async def generate_content(
+# ---------------------------------------------------------------------------
+# Public helpers
+# ---------------------------------------------------------------------------
+
+
+async def generate(
     prompt: str,
-    max_tokens: int = 4096,
-    temperature: float = 0.7,
-    system_instruction: Optional[str] = None,
-    thinking_budget: Optional[int] = None,
+    system_instruction: str | None = None,
 ) -> str:
-    """
-    Generate content using the Gemini API (google-genai SDK).
-
-    Runs the synchronous SDK call in a thread-pool executor
-    so it never blocks the async event loop, wrapped with a timeout.
-
-    Args:
-        prompt: The prompt to send to Gemini.
-        max_tokens: Maximum tokens in the response.
-        temperature: Sampling temperature (lower = more deterministic).
-        system_instruction: Optional system-level instruction.
-        thinking_budget: Thinking token budget for Gemini 2.5+.
-            Set to 0 to disable thinking (best for structured JSON).
-            None = model default.
-
-    Returns:
-        The generated text response.
-
-    Raises:
-        TimeoutError: If Gemini takes too long.
-        RuntimeError: If the response is empty or blocked.
-    """
-    client = _get_client()
-    model_name = settings.GEMINI_MODEL
-
-    logger.info(
-        "Gemini call – model=%s, prompt_len=%d, max_tokens=%d, temp=%.2f, sys=%s, think=%s",
-        model_name,
-        len(prompt),
-        max_tokens,
-        temperature,
-        bool(system_instruction),
-        thinking_budget,
-    )
-
-    def _call() -> str:
-        config: dict = {
-            "max_output_tokens": max_tokens,
-            "temperature": temperature,
-        }
+    """Send a prompt to Gemini and return the raw text response."""
+    try:
+        config = types.GenerateContentConfig(
+            temperature=0.7,
+            max_output_tokens=4096,
+        )
         if system_instruction:
-            config["system_instruction"] = system_instruction
+            config.system_instruction = system_instruction
 
-        # Thinking budget for Gemini 2.5+ models
-        if thinking_budget is not None:
-            config["thinking_config"] = {"thinking_budget": thinking_budget}
-
-        response = client.models.generate_content(
-            model=model_name,
+        response = await client.aio.models.generate_content(
+            model=settings.GEMINI_MODEL,
             contents=prompt,
             config=config,
         )
+        return response.text.strip()
 
-        # Safety-block guard
-        try:
-            text = response.text
-        except (ValueError, AttributeError):
-            logger.warning("Gemini response blocked by safety filters")
-            raise RuntimeError("The AI response was blocked by safety filters.")
+    except Exception as exc:
+        logger.error("Gemini generation failed: %s", exc, exc_info=True)
+        raise RuntimeError(f"AI generation failed: {exc}") from exc
 
-        if not text or not text.strip():
-            raise RuntimeError("Gemini returned an empty response.")
 
-        logger.info("Gemini response received – %d chars", len(text))
-        return text
+async def generate_json(
+    prompt: str,
+    system_instruction: str | None = None,
+) -> Any:
+    """Send a prompt to Gemini and parse the response as JSON.
+
+    The model is instructed to reply with pure JSON.  If the response
+    contains a Markdown code-fence we strip it before parsing.
+    """
+    base_instruction = (
+        "You MUST respond with valid JSON only. "
+        "Do NOT wrap the JSON in markdown code fences or add any text outside the JSON object."
+    )
+    if system_instruction:
+        full_instruction = f"{system_instruction}\n\n{base_instruction}"
+    else:
+        full_instruction = base_instruction
+
+    raw = await generate(prompt, system_instruction=full_instruction)
+
+    # Strip optional ```json ... ``` wrapper
+    cleaned = re.sub(r"^```(?:json)?\s*", "", raw)
+    cleaned = re.sub(r"\s*```$", "", cleaned)
+    cleaned = cleaned.strip()
 
     try:
-        result = await asyncio.wait_for(
-            asyncio.get_event_loop().run_in_executor(None, _call),
-            timeout=GEMINI_TIMEOUT,
+        return json.loads(cleaned)
+    except json.JSONDecodeError as exc:
+        logger.error(
+            "Failed to parse Gemini JSON response: %s\nRaw: %s",
+            exc,
+            raw[:500],
         )
-        return result
-    except asyncio.TimeoutError:
-        logger.error("Gemini call timed out after %ds", GEMINI_TIMEOUT)
-        raise TimeoutError(f"AI analysis timed out after {GEMINI_TIMEOUT}s. Please try again.")
-    except RuntimeError:
-        raise
-    except Exception as exc:
-        logger.exception("Gemini call failed: %s", exc)
-        raise RuntimeError(f"AI service error: {exc}") from exc
+        raise RuntimeError(
+            "AI returned invalid JSON. Please try again."
+        ) from exc

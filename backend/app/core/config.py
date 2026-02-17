@@ -1,13 +1,11 @@
 from pydantic_settings import BaseSettings
-from functools import lru_cache
-from typing import Optional
+from typing import List
+import json
 
 
 class Settings(BaseSettings):
-    """Application settings loaded from environment variables."""
-
-    # App
-    APP_NAME: str = "Recruit AI API"
+    # Application
+    APP_NAME: str = "CVFlow API"
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 
@@ -15,38 +13,34 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
 
     # CORS
-    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: str = '["http://localhost:3066"]'
+
+    @property
+    def cors_origins_list(self) -> List[str]:
+        return json.loads(self.CORS_ORIGINS)
 
     # Firebase
     FIREBASE_PROJECT_ID: str = ""
-    FIREBASE_SERVICE_ACCOUNT_PATH: Optional[str] = None
+    FIREBASE_SERVICE_ACCOUNT_PATH: str = "./service-account.json"
 
-    # Gemini AI
+    # Google Gemini AI
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.5-flash"
+    GEMINI_MODEL: str = "gemini-2.5-flash-preview-05-20"
 
     # Stripe
     STRIPE_SECRET_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""
-    STRIPE_PRICE_ID_PREMIUM: str = ""
-
-    # Freemium limits
-    FREE_AI_USES: int = 3
+    STRIPE_PRICE_ID_STARTER: str = ""
+    STRIPE_PRICE_ID_PRO: str = ""
 
     # Rate Limiting
     RATE_LIMIT_REQUESTS: int = 100
-    RATE_LIMIT_PERIOD: int = 60  # seconds
+    RATE_LIMIT_PERIOD: int = 60
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = True
-
-
-@lru_cache()
-def get_settings() -> Settings:
-    """Get cached settings instance."""
-    return Settings()
+    model_config = {
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+    }
 
 
-settings = get_settings()
+settings = Settings()

@@ -1,113 +1,265 @@
+"""Cover letter generation and management endpoints."""
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import Response
 from typing import List
-from app.core.security import get_current_user, CurrentUser
-from app.services.firebase import user_service, cover_letter_service
-from app.services.firebase.usage_gate import authorize_ai_feature
-from app.services.ai import generate_cover_letter
+
+from app.core.security import get_current_user
 from app.schemas.cover_letter import (
-    CoverLetterRequest,
-    CoverLetterResponse,
-    CoverLetterUpdate,
-    CoverLetterListItem,
+    CoverLetterGenerateRequest,
+    CoverLetterRewriteRequest,
+    CoverLetterContent,
+    CoverLetterVersion,
+    CoverLetterDownloadRequest,
 )
 
 router = APIRouter()
 
 
-@router.post("/generate", response_model=CoverLetterResponse)
-async def generate_cover_letter_endpoint(
-    request: CoverLetterRequest,
-    current_user: CurrentUser = Depends(get_current_user),
+@router.post("/generate", response_model=CoverLetterContent)
+async def generate_cover_letter(
+    body: CoverLetterGenerateRequest,
+    user: dict = Depends(get_current_user),
 ):
-    """Generate a personalized cover letter using AI."""
-    # Check free uses / subscription
-    user = await user_service.get_user(current_user.uid)
-    plan = user.plan if user else "free"
+    """Generate a cover letter based on CV content and a job description."""
+    try:
+        from app.services.firebase.cv_service import get_cv
+        from app.services.ai.gemini_client import generate_json
+        import json
+        from datetime import datetime
 
-    await authorize_ai_feature(current_user.uid, plan)
+        # Fetch the CV
+        cv = get_cv(user["uid"], body.cv_id)
+        if cv is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="CV not found",
+            )
 
-    # Generate cover letter
-    cover_letter = await generate_cover_letter(
-        job_title=request.job_title,
-        company_name=request.company_name,
-        job_description=request.job_description,
-        tone=request.tone,
-        additional_context=request.additional_context,
-    )
+        cv_content = json.dumps(cv.get("content", {}), indent=2)
 
-    # Save to Firestore
-    letter_id = await cover_letter_service.save_cover_letter(
-        current_user.uid, cover_letter
-    )
-    cover_letter.id = letter_id
-    cover_letter.user_id = current_user.uid
+        prompt = (
+            f"You are an expert cover letter writer. Generate a {body.tone} cover letter "
+            f"in {body.format} format. Language: {body.language}.\n\n"
+            f"CV Content:\n{cv_content[:5000]}\n\n"
+            f"Job Description:\n{body.job_description[:3000]}\n\n"
+        )
+        if body.custom_instructions:
+            prompt += f"Additional instructions: {body.custom_instructions}\n\n"
 
-    return cover_letter
-
-
-@router.get("/", response_model=List[CoverLetterListItem])
-async def get_cover_letters(
-    limit: int = 20,
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    """Get the current user's cover letter history."""
-    letters = await cover_letter_service.get_user_cover_letters(
-        current_user.uid, limit
-    )
-    return letters
-
-
-@router.get("/{letter_id}", response_model=CoverLetterResponse)
-async def get_cover_letter(
-    letter_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    """Get a specific cover letter by ID."""
-    letter = await cover_letter_service.get_cover_letter(current_user.uid, letter_id)
-
-    if not letter:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Cover letter not found",
+        prompt += (
+            "Return a JSON object with:\n"
+            "- paragraphs: list of strings (each paragraph of the letter)\n"
+            "- word_count: int"
         )
 
-    return letter
+        result = await generate_json(prompt)
+        paragraphs = result.get("paragraphs", [])
+        word_count = result.get("word_count", sum(len(p.split()) for p in paragraphs))
 
+        # Save to Firestore
+        from app.core.firebase import get_db
 
-@router.put("/{letter_id}", response_model=CoverLetterResponse)
-async def update_cover_letter(
-    letter_id: str,
-    update_data: CoverLetterUpdate,
-    current_user: CurrentUser = Depends(get_current_user),
-):
-    """Update a cover letter's content."""
-    letter = await cover_letter_service.update_cover_letter(
-        current_user.uid, letter_id, update_data.content
-    )
+        cl_data = {
+            "cv_id": body.cv_id,
+            "paragraphs": paragraphs,
+            "tone": body.tone,
+            "format": body.format,
+            "language": body.language,
+            "word_count": word_count,
+            "created_at": datetime.utcnow().isoformat(),
+            "uid": user["uid"],
+        }
+        db = get_db()
+        _, ref = db.collection("users").document(user["uid"]).collection("cover_letters").add(cl_data)
 
-    if not letter:
+        return CoverLetterContent(
+            id=ref.id,
+            cv_id=body.cv_id,
+            paragraphs=paragraphs,
+            tone=body.tone,
+            format=body.format,
+            language=body.language,
+            word_count=word_count,
+            created_at=cl_data["created_at"],
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Cover letter not found",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate cover letter: {exc}",
         )
 
-    return letter
 
-
-@router.delete("/{letter_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_cover_letter(
-    letter_id: str,
-    current_user: CurrentUser = Depends(get_current_user),
+@router.post("/rewrite-paragraph")
+async def rewrite_paragraph(
+    body: CoverLetterRewriteRequest,
+    user: dict = Depends(get_current_user),
 ):
-    """Delete a cover letter."""
-    deleted = await cover_letter_service.delete_cover_letter(
-        current_user.uid, letter_id
-    )
+    """Rewrite a specific paragraph of a cover letter."""
+    try:
+        from app.services.ai.gemini_client import generate
 
-    if not deleted:
+        prompt = (
+            f"Rewrite the following cover letter paragraph in a {body.tone} tone.\n\n"
+            f"Original paragraph:\n{body.current_text}\n\n"
+        )
+        if body.instructions:
+            prompt += f"Additional instructions: {body.instructions}\n\n"
+        prompt += "Return ONLY the rewritten paragraph, nothing else."
+
+        rewritten = await generate(prompt)
+        return {"rewritten_text": rewritten}
+    except Exception as exc:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Cover letter not found",
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to rewrite paragraph: {exc}",
         )
 
-    return None
+
+@router.post("/{cl_id}/save-version", status_code=status.HTTP_201_CREATED)
+async def save_version(
+    cl_id: str,
+    user: dict = Depends(get_current_user),
+):
+    """Save the current state of a cover letter as a version."""
+    try:
+        from app.core.firebase import get_db
+        from datetime import datetime
+
+        db = get_db()
+        cl_ref = db.collection("users").document(user["uid"]).collection("cover_letters").document(cl_id)
+        cl_doc = cl_ref.get()
+
+        if not cl_doc.exists:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Cover letter not found",
+            )
+
+        cl_data = cl_doc.to_dict()
+        version_data = {
+            "paragraphs": cl_data.get("paragraphs", []),
+            "tone": cl_data.get("tone", "professional"),
+            "created_at": datetime.utcnow().isoformat(),
+        }
+
+        _, version_ref = cl_ref.collection("versions").add(version_data)
+
+        return CoverLetterVersion(
+            id=version_ref.id,
+            tone=version_data["tone"],
+            created_at=version_data["created_at"],
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to save version: {exc}",
+        )
+
+
+@router.get("/{cl_id}/versions", response_model=List[CoverLetterVersion])
+async def list_versions(
+    cl_id: str,
+    user: dict = Depends(get_current_user),
+):
+    """List all saved versions of a cover letter."""
+    try:
+        from app.core.firebase import get_db
+
+        db = get_db()
+        cl_ref = db.collection("users").document(user["uid"]).collection("cover_letters").document(cl_id)
+
+        # Verify cover letter exists
+        if not cl_ref.get().exists:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Cover letter not found",
+            )
+
+        versions = []
+        docs = cl_ref.collection("versions").order_by("created_at", direction="DESCENDING").stream()
+        for doc in docs:
+            data = doc.to_dict()
+            versions.append(CoverLetterVersion(
+                id=doc.id,
+                tone=data.get("tone", "professional"),
+                created_at=data.get("created_at", ""),
+            ))
+        return versions
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to list versions: {exc}",
+        )
+
+
+@router.post("/download")
+async def download_cover_letter(
+    body: CoverLetterDownloadRequest,
+    user: dict = Depends(get_current_user),
+):
+    """Generate and download a cover letter as PDF or DOCX."""
+    try:
+        full_text = "\n\n".join(body.paragraphs)
+
+        if body.format == "pdf":
+            try:
+                from app.services.pdf.generator import generate_cover_letter_pdf
+
+                pdf_bytes = await generate_cover_letter_pdf(
+                    text=full_text,
+                    tone=body.tone,
+                    letter_format=body.letter_format,
+                )
+                return Response(
+                    content=pdf_bytes,
+                    media_type="application/pdf",
+                    headers={
+                        "Content-Disposition": 'attachment; filename="cover_letter.pdf"',
+                    },
+                )
+            except ImportError:
+                # Fallback: generate a simple PDF with reportlab or return text
+                raise HTTPException(
+                    status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                    detail="PDF generation service is not yet available",
+                )
+        elif body.format == "docx":
+            try:
+                from app.services.pdf.generator import generate_cover_letter_docx
+
+                docx_bytes = await generate_cover_letter_docx(
+                    text=full_text,
+                    tone=body.tone,
+                    letter_format=body.letter_format,
+                )
+                return Response(
+                    content=docx_bytes,
+                    media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    headers={
+                        "Content-Disposition": 'attachment; filename="cover_letter.docx"',
+                    },
+                )
+            except ImportError:
+                raise HTTPException(
+                    status_code=status.HTTP_501_NOT_IMPLEMENTED,
+                    detail="DOCX generation service is not yet available",
+                )
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported format: {body.format}. Use 'pdf' or 'docx'.",
+            )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to download cover letter: {exc}",
+        )

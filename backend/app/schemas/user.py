@@ -1,41 +1,55 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
-from datetime import datetime
+from typing import Optional, List
 
 
-class UserBase(BaseModel):
-    """Base user schema."""
-    email: Optional[EmailStr] = None
-    display_name: Optional[str] = None
-    photo_url: Optional[str] = None
-
-
-class UserProfile(UserBase):
-    """User profile as stored in Firestore."""
+class UserProfile(BaseModel):
     uid: str
+    email: str
+    full_name: str
+    country: str
+    city: Optional[str] = None
+    phone: Optional[str] = None
+    profile_image: Optional[str] = None
     plan: str = "free"
-    free_uses_remaining: int = 3
-    stripe_customer_id: Optional[str] = None
-    created_at: Optional[datetime] = None
-    consent_terms: bool = True
-    consent_marketing: bool = False
-
-    class Config:
-        from_attributes = True
+    plan_expires: Optional[str] = None
+    created_at: Optional[str] = None
 
 
-class UserUpdate(BaseModel):
-    """Schema for updating user profile."""
-    display_name: Optional[str] = None
-    consent_marketing: Optional[bool] = None
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    country: Optional[str] = None
+    city: Optional[str] = None
+    phone: Optional[str] = None
 
 
-class UserResponse(UserBase):
-    """User response schema."""
-    uid: str
-    plan: str
-    free_uses_remaining: int = 3
-    created_at: Optional[datetime] = None
+class UserPreferences(BaseModel):
+    auto_save: bool = True
+    ats_tips: bool = True
+    ai_suggestions: bool = True
+    language: str = "en"
+    cv_language: str = "en"
+    date_format: str = "DD/MM/YYYY"
+    currency: str = "USD"
 
-    class Config:
-        from_attributes = True
+
+class UserPreferencesUpdate(BaseModel):
+    auto_save: Optional[bool] = None
+    ats_tips: Optional[bool] = None
+    ai_suggestions: Optional[bool] = None
+    language: Optional[str] = None
+    cv_language: Optional[str] = None
+    date_format: Optional[str] = None
+    currency: Optional[str] = None
+
+
+class EmailPreferences(BaseModel):
+    job_alerts: bool = True
+    weekly_summary: bool = True
+    tips_and_guides: bool = True
+    product_updates: bool = True
+
+
+class ReminderPreferences(BaseModel):
+    follow_up_reminders: bool = True
+    interview_reminders: bool = True
+    application_deadlines: bool = True
