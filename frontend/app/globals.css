@@ -1,6 +1,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/* CVFlow Design System */
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -86,5 +87,16 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@keyframes mapPulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
   }
 }

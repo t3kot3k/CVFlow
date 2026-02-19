@@ -80,8 +80,8 @@ export function TemplatesGallery() {
               onClick={() => setActiveFilter(f)}
               className={`rounded-full px-4 py-1.5 text-sm transition-all ${
                 activeFilter === f
-                  ? "bg-[#283618] text-[#fefae0] font-semibold"
-                  : "border border-gray-200 text-[#283618] hover:bg-gray-50"
+                  ? "bg-[#283618] text-[#fefae0] font-semibold shadow-md"
+                  : "border border-[#606c38]/20 text-[#283618] hover:bg-[#dda15e]/10 hover:border-[#dda15e]/40"
               }`}
             >
               {f}
@@ -94,7 +94,7 @@ export function TemplatesGallery() {
           {filtered.map((template) => (
             <div
               key={template.name}
-              className="group cursor-pointer overflow-hidden rounded-xl border border-gray-100 bg-white shadow-sm transition-all hover:scale-105 hover:border-[#dda15e] hover:shadow-xl"
+              className="group cursor-pointer overflow-hidden rounded-xl border border-[#606c38]/10 bg-white shadow-sm transition-all duration-300 hover:scale-[1.03] hover:border-[#dda15e]/40 hover:shadow-xl hover:shadow-[#283618]/5"
             >
               <MiniCV color={template.color} name={template.name} />
             </div>

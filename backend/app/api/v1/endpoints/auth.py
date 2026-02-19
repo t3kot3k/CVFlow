@@ -103,7 +103,7 @@ async def google_oauth(body: OAuthRequest):
         from app.core.firebase import get_auth
 
         auth = get_auth()
-        decoded = auth.verify_id_token(body.id_token)
+        decoded = auth.verify_id_token(body.id_token, clock_skew_seconds=60)
         uid = decoded["uid"]
 
         from app.services.firebase.user_service import get_user, create_user
@@ -145,7 +145,7 @@ async def linkedin_oauth(body: OAuthRequest):
         from app.core.firebase import get_auth
 
         auth = get_auth()
-        decoded = auth.verify_id_token(body.id_token)
+        decoded = auth.verify_id_token(body.id_token, clock_skew_seconds=60)
         uid = decoded["uid"]
 
         from app.services.firebase.user_service import get_user, create_user

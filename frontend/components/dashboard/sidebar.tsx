@@ -26,7 +26,7 @@ import {
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "My CVs", href: "/dashboard/cvs", icon: FileText, badge: "3" },
+  { label: "My CVs", href: "/dashboard/cvs", icon: FileText },
   { label: "Templates", href: "/dashboard/templates", icon: Palette },
   { label: "Cover Letter", href: "/dashboard/cover-letter", icon: Mail },
   { label: "Job Tracker", href: "/dashboard/jobs", icon: Briefcase },
@@ -126,11 +126,7 @@ export function DashboardSidebar() {
                     </motion.span>
                   )}
                 </AnimatePresence>
-                {item.badge && !collapsed && (
-                  <span className="ml-auto flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#dda15e]/20 px-1.5 text-xs font-semibold text-[#dda15e]">
-                    {item.badge}
-                  </span>
-                )}
+
                 {/* Tooltip when collapsed */}
                 {collapsed && (
                   <span className="pointer-events-none absolute left-full ml-2 rounded-md bg-[#283618] px-2 py-1 text-xs text-[#fefae0] opacity-0 shadow-lg transition-opacity group-hover:opacity-100 border border-[#606c38]/30">

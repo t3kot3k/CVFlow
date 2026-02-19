@@ -2,8 +2,20 @@
 
 import Link from "next/link"
 import { Check, X, ChevronDown } from "lucide-react"
+import { useState } from "react"
+import { motion } from "framer-motion"
 
 export function Pricing() {
+  const [isAnnual, setIsAnnual] = useState(false)
+
+  const prices = {
+    starter: { monthly: 11, annual: 79 },
+    pro: { monthly: 22, annual: 159 },
+  }
+
+  const starterPrice = isAnnual ? prices.starter.annual : prices.starter.monthly
+  const proPrice = isAnnual ? prices.pro.annual : prices.pro.monthly
+
   return (
     <section id="pricing" className="bg-[#283618] px-6 py-24">
       <div className="mx-auto max-w-7xl">
@@ -14,18 +26,37 @@ export function Pricing() {
           <h2 className="mt-3 text-4xl font-bold text-[#fefae0] text-balance">
             Fair pricing for every wallet.
           </h2>
-          <p className="mx-auto mt-4 max-w-2xl text-[#fefae0]/80">
-            We use Purchasing Power Parity.
-            Your price adapts to your country. Same features, same quality.
-          </p>
         </div>
 
-        {/* Region Selector */}
-        <div className="mt-6 flex justify-center">
-          <button className="inline-flex items-center gap-2 rounded-full bg-[#606c38] px-4 py-2 text-sm text-[#fefae0]">
-            Showing prices for: North America
-            <ChevronDown className="h-4 w-4" />
-          </button>
+        {/* Billing Toggle */}
+        <div className="mt-8 flex justify-center">
+          <div className="inline-flex items-center gap-3 rounded-full bg-white/10 backdrop-blur p-1">
+            <button
+              onClick={() => setIsAnnual(false)}
+              className={`px-5 py-2 rounded-full font-semibold transition-all ${
+                !isAnnual
+                  ? "bg-[#dda15e] text-[#283618] shadow-lg"
+                  : "text-[#fefae0]/60 hover:text-[#fefae0]"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setIsAnnual(true)}
+              className={`px-5 py-2 rounded-full font-semibold transition-all relative ${
+                isAnnual
+                  ? "bg-[#dda15e] text-[#283618] shadow-lg"
+                  : "text-[#fefae0]/60 hover:text-[#fefae0]"
+              }`}
+            >
+              Annual
+              {isAnnual && (
+                <span className="absolute -top-3 -right-8 rounded-full bg-[#606c38] px-2 py-0.5 text-[10px] font-bold text-[#dda15e] whitespace-nowrap">
+                  save 32%
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Pricing Cards */}
@@ -73,10 +104,16 @@ export function Pricing() {
             </span>
             <h3 className="text-2xl font-bold text-[#283618]">Starter</h3>
             <p className="mt-2">
-              <span className="text-4xl font-bold text-[#283618]">$11</span>
-              <span className="text-sm text-[#283618]/70"> / month</span>
+              <motion.span
+                key={starterPrice}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-4xl font-bold text-[#283618]"
+              >
+                ${starterPrice}
+              </motion.span>
+              <span className="text-sm text-[#283618]/70"> / {isAnnual ? "year" : "month"}</span>
             </p>
-            <p className="mt-1 text-xs text-[#283618]/70">from $2/month in Sub-Saharan Africa</p>
             <ul className="mt-6 space-y-3">
               {[
                 { text: "Unlimited CVs + all templates", included: true },
@@ -115,10 +152,16 @@ export function Pricing() {
             </span>
             <h3 className="text-2xl font-bold text-[#fefae0]">Pro</h3>
             <p className="mt-2">
-              <span className="text-4xl font-bold text-[#fefae0]">$22</span>
-              <span className="text-sm text-[#fefae0]/70"> / month</span>
+              <motion.span
+                key={proPrice}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-4xl font-bold text-[#fefae0]"
+              >
+                ${proPrice}
+              </motion.span>
+              <span className="text-sm text-[#fefae0]/70"> / {isAnnual ? "year" : "month"}</span>
             </p>
-            <p className="mt-1 text-xs text-[#fefae0]/70">from $5/month in Sub-Saharan Africa</p>
             <ul className="mt-6 space-y-3">
               {[
                 "Everything in Starter",
@@ -150,9 +193,7 @@ export function Pricing() {
           <p className="text-sm text-[#fefae0]/70">
             In Africa: pay with Wave, Orange Money or MTN MoMo — no credit card needed.
           </p>
-          <a href="#pricing" className="mt-2 inline-block text-sm font-semibold text-[#dda15e]">
-            {"See full pricing \u2192"}
-          </a>
+
         </div>
       </div>
     </section>

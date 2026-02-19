@@ -9,37 +9,41 @@ const testimonials = [
     quote: "I applied to 40 jobs with a generic CV \u2014 zero responses. CVFlow tailored my CV to each offer and I had 3 interviews in 2 weeks. The ATS score feature is a game-changer.",
     name: "Nadia B.",
     role: "Marketing Manager",
-    location: "\u{1F1F2}\u{1F1E6} Casablanca",
+    location: "Casablanca, Morocco",
     company: "Joined Deloitte",
     color: "#dda15e",
     initials: "NB",
+    avatar: "/images/avatar-nadia.jpg",
   },
   {
     quote: "As a student with no experience, I didn\u2019t know how to write a CV. The AI wrote everything for me \u2014 even quantified my internship results. I got my first job offer 10 days later.",
     name: "Kofi A.",
     role: "Junior Developer",
-    location: "\u{1F1EC}\u{1F1ED} Accra",
+    location: "Accra, Ghana",
     company: "Joined Orange Digital Center",
     color: "#606c38",
     initials: "KA",
+    avatar: "/images/avatar-kofi.jpg",
   },
   {
     quote: "I was switching from finance to product management. CVFlow helped me reframe my entire experience around transferable skills. The interview simulator prepared me for every question.",
     name: "L\u00e9a M.",
     role: "Product Manager",
-    location: "\u{1F1EB}\u{1F1F7} Paris",
+    location: "Paris, France",
     company: "Joined a Series B startup",
     color: "#bc6c25",
     initials: "LM",
+    avatar: "/avatars/lea.svg",
   },
   {
     quote: "The pricing adapted to my country automatically. I paid with Orange Money \u2014 no credit card needed. Finally a tool that remembers Africa exists.",
     name: "Mamadou D.",
     role: "Civil Engineer",
-    location: "\u{1F1F8}\u{1F1F3} Dakar",
+    location: "Dakar, Senegal",
     company: "Joined Total Energies",
     color: "#283618",
     initials: "MD",
+    avatar: "/avatars/mamadou.svg",
   },
 ]
 
@@ -48,6 +52,31 @@ const statItems = [
   { value: "87%", label: "Report more interview callbacks" },
   { value: "4.8/5", label: "Average satisfaction rating" },
 ]
+
+function Avatar({ avatar, initials, color }: { avatar: string; initials: string; color: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) {
+    return (
+      <div
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white"
+        style={{ backgroundColor: color }}
+      >
+        {initials}
+      </div>
+    )
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={avatar}
+      alt={initials}
+      width={40}
+      height={40}
+      className="h-10 w-10 shrink-0 rounded-full object-cover"
+      onError={() => setFailed(true)}
+    />
+  )
+}
 
 function useInView() {
   const [ref, setRef] = useState<HTMLElement | null>(null)
@@ -121,7 +150,7 @@ export function Testimonials() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -30 }}
                   transition={{ duration: 0.3, delay: i * 0.05 }}
-                  className="rounded-2xl bg-white p-6 shadow-md"
+                  className="rounded-2xl bg-white p-6 shadow-md border border-[#606c38]/5 transition-all hover:shadow-lg hover:border-[#dda15e]/20"
                 >
                   <div className="flex gap-0.5 mb-4">
                     {[...Array(5)].map((_, j) => (
@@ -132,12 +161,7 @@ export function Testimonials() {
                     {"\u201C"}{t.quote}{"\u201D"}
                   </p>
                   <div className="flex items-center gap-3 mt-auto">
-                    <div
-                      className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white"
-                      style={{ backgroundColor: t.color }}
-                    >
-                      {t.initials}
-                    </div>
+                    <Avatar avatar={t.avatar} initials={t.initials} color={t.color} />
                     <div>
                       <p className="text-sm font-semibold text-[#283618]">{t.name}</p>
                       <p className="text-xs text-[#606c38]">{t.role} {"\u00B7"} {t.location}</p>
@@ -158,7 +182,7 @@ export function Testimonials() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -30 }}
                 transition={{ duration: 0.3 }}
-                className="rounded-2xl bg-white p-6 shadow-md"
+                className="rounded-2xl bg-white p-6 shadow-md border border-[#606c38]/5"
               >
                 <div className="flex gap-0.5 mb-4">
                   {[...Array(5)].map((_, j) => (
@@ -169,12 +193,7 @@ export function Testimonials() {
                   {"\u201C"}{testimonials[current].quote}{"\u201D"}
                 </p>
                 <div className="flex items-center gap-3">
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white"
-                    style={{ backgroundColor: testimonials[current].color }}
-                  >
-                    {testimonials[current].initials}
-                  </div>
+                  <Avatar avatar={testimonials[current].avatar} initials={testimonials[current].initials} color={testimonials[current].color} />
                   <div>
                     <p className="text-sm font-semibold text-[#283618]">{testimonials[current].name}</p>
                     <p className="text-xs text-[#606c38]">{testimonials[current].role} {"\u00B7"} {testimonials[current].location}</p>

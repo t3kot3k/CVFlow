@@ -10,18 +10,11 @@ const stats = [
   { value: "60+", label: "CV templates by region" },
 ]
 
-const cities: { name: string; x: number; y: number }[] = [
-  { name: "Toronto", x: 23, y: 32 },
-  { name: "S\u00e3o Paulo", x: 32, y: 68 },
-  { name: "Dakar", x: 43, y: 48 },
-  { name: "Abidjan", x: 44, y: 53 },
-  { name: "Casablanca", x: 45, y: 38 },
-  { name: "Paris", x: 49, y: 32 },
-  { name: "London", x: 48, y: 28 },
-  { name: "Berlin", x: 52, y: 29 },
-  { name: "Nairobi", x: 58, y: 55 },
-  { name: "Mumbai", x: 68, y: 46 },
-  { name: "Singapore", x: 76, y: 56 },
+const markers = [
+  { name: "Dakar", left: "44%", top: "42%", delay: "0s" },
+  { name: "Paris", left: "47%", top: "26%", delay: "0.4s" },
+  { name: "Mumbai", left: "63%", top: "42%", delay: "0.8s" },
+  { name: "Toronto", left: "20%", top: "30%", delay: "1.2s" },
 ]
 
 function useCountUp(target: number, trigger: boolean) {
@@ -93,33 +86,46 @@ export function GlobalCoverage() {
         </div>
 
         <div className="mt-16 grid items-start gap-12 lg:grid-cols-2">
-          {/* Left - World Map */}
-          <div className="relative aspect-[16/10] w-full rounded-xl bg-[#283618]/5 overflow-hidden">
-            {/* Simple world map outline using an SVG */}
-            <svg viewBox="0 0 100 70" className="h-full w-full" fill="none">
-              {/* Continent outlines (simplified) */}
-              <path d="M15,20 Q20,15 30,18 Q35,22 28,30 Q22,35 18,28 Z" fill="#606c38" opacity="0.1" />
-              <path d="M25,45 Q30,40 35,50 Q33,65 28,60 Q23,55 25,45 Z" fill="#606c38" opacity="0.1" />
-              <path d="M40,20 Q55,15 60,25 Q58,40 50,35 Q42,30 40,20 Z" fill="#606c38" opacity="0.1" />
-              <path d="M42,38 Q48,35 55,40 Q58,55 52,60 Q45,58 42,45 Z" fill="#606c38" opacity="0.1" />
-              <path d="M62,25 Q75,20 85,30 Q82,45 75,50 Q68,45 65,35 Z" fill="#606c38" opacity="0.1" />
-              <path d="M72,52 Q80,48 85,55 Q82,65 75,62 Z" fill="#606c38" opacity="0.1" />
-            </svg>
-            {/* City dots */}
-            {cities.map((city) => (
-              <motion.div
-                key={city.name}
-                initial={{ scale: 0, opacity: 0 }}
-                animate={inView ? { scale: 1, opacity: 1 } : {}}
-                transition={{ duration: 0.4, delay: Math.random() * 0.5 }}
-                className="absolute"
-                style={{ left: `${city.x}%`, top: `${city.y}%` }}
+          {/* Left - World Map with markers */}
+          <div className="relative w-full rounded-2xl overflow-hidden" style={{ height: "380px" }}>
+            {/* Static SVG world map */}
+            <img
+              src="/world.svg"
+              alt="World map"
+              className="h-full w-full object-contain opacity-80"
+              draggable={false}
+            />
+
+            {/* Absolute-positioned pulse markers */}
+            {markers.map((marker) => (
+              <div
+                key={marker.name}
+                className="absolute flex flex-col items-center"
+                style={{ left: marker.left, top: marker.top, transform: "translate(-50%, -50%)" }}
               >
-                <span className="relative flex h-3 w-3">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#dda15e] opacity-40" />
-                  <span className="relative inline-flex h-3 w-3 rounded-full bg-[#dda15e]" />
+                {/* Ripple ring */}
+                <span
+                  className="absolute h-6 w-6 rounded-full border-2 border-[#dda15e] opacity-0"
+                  style={{
+                    animation: `mapPulse 2s ease-out infinite`,
+                    animationDelay: marker.delay,
+                  }}
+                />
+                {/* Outer glow */}
+                <span
+                  className="absolute h-4 w-4 rounded-full bg-[#dda15e]/20"
+                  style={{
+                    animation: `mapPulse 2s ease-out infinite`,
+                    animationDelay: marker.delay,
+                  }}
+                />
+                {/* Dot */}
+                <span className="relative z-10 h-2.5 w-2.5 rounded-full bg-[#dda15e] shadow-[0_0_8px_rgba(221,161,94,0.6)]" />
+                {/* City label */}
+                <span className="mt-1.5 whitespace-nowrap rounded-full bg-[#283618]/80 px-2 py-0.5 text-[10px] font-medium text-[#fefae0]">
+                  {marker.name}
                 </span>
-              </motion.div>
+              </div>
             ))}
           </div>
 

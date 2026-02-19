@@ -1,31 +1,36 @@
-import { Leaf } from "lucide-react"
+"use client"
+
+import Link from "next/link"
+import { Leaf, ArrowRight } from "lucide-react"
+import { useState } from "react"
 
 const footerLinks = {
-  Product: [
-    "CV Builder", "ATS Score", "Job Tracker", "Interview Prep",
-    "LinkedIn Optimizer", "Templates", "Pricing",
-  ],
-  Company: [
-    "About", "Blog", "Research", "Press", "Careers",
-    "For Universities", "For Agencies",
-  ],
   Support: [
-    "Help Center", "Contact us", "Privacy Policy", "Terms",
-    "Status page", "GDPR",
+    { label: "Contact us", href: "/help" },
+    { label: "Privacy Policy", href: "#" },
+    { label: "Terms", href: "#" },
+    { label: "Help Center", href: "/help" },
   ],
 }
 
 const languages = [
-  "\u{1F1EB}\u{1F1F7}", "\u{1F1EC}\u{1F1E7}", "\u{1F1F8}\u{1F1F3}", "\u{1F1F2}\u{1F1E6}",
-  "\u{1F1E9}\u{1F1FF}", "\u{1F1EE}\u{1F1F3}", "\u{1F1E7}\u{1F1F7}", "\u{1F1E9}\u{1F1EA}", "\u{1F1EF}\u{1F1F5}",
+  { code: "FR", name: "French" },
+  { code: "EN", name: "English" },
+  { code: "AR", name: "Arabic", rtl: true },
+  { code: "ES", name: "Spanish" },
+  { code: "PT", name: "Portuguese" },
+  { code: "SW", name: "Swahili — East Africa", tooltip: true },
+  { code: "HI", name: "Hindi — India", tooltip: true },
 ]
 
 export function Footer() {
+  const [hoveredLang, setHoveredLang] = useState<string | null>(null)
+
   return (
-    <footer className="bg-[#283618] px-6 pb-8 pt-16 text-[#fefae0]">
-      <div className="mx-auto max-w-7xl">
-        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Brand */}
+    <footer className="bg-[#283618] text-[#fefae0]">
+      <div className="mx-auto max-w-5xl px-8 py-12">
+        <div className="flex items-start justify-between gap-12">
+          {/* Left — Brand */}
           <div>
             <a href="#" className="flex items-center gap-2">
               <Leaf className="h-5 w-5 text-[#606c38]" />
@@ -35,31 +40,45 @@ export function Footer() {
               The CV builder built for the whole world.
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
-              {languages.map((flag, i) => (
-                <span key={i} className="text-lg" aria-hidden="true">{flag}</span>
+              {languages.map((lang) => (
+                <div key={lang.code} className="relative">
+                  <button
+                    onMouseEnter={() => setHoveredLang(lang.code)}
+                    onMouseLeave={() => setHoveredLang(null)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs text-white opacity-70 transition-opacity hover:opacity-100 cursor-pointer"
+                  >
+                    {lang.code}
+                    {lang.rtl && <ArrowRight className="h-2.5 w-2.5 opacity-50 rotate-180" />}
+                  </button>
+                  {lang.tooltip && hoveredLang === lang.code && (
+                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 rounded bg-[#606c38] px-2 py-1 text-[10px] text-white whitespace-nowrap pointer-events-none">
+                      {lang.name}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
-            <p className="mt-2 text-xs text-[#fefae0]/40">Available in 10+ languages</p>
+            <p className="mt-2 text-xs text-[#fefae0]/40">Available in 7 languages · More coming soon</p>
           </div>
 
-          {/* Link columns */}
-          {Object.entries(footerLinks).map(([category, links]) => (
-            <div key={category}>
-              <h4 className="mb-4 text-sm font-semibold text-[#fefae0]">{category}</h4>
-              <ul className="space-y-3">
-                {links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
-                      className="text-sm text-[#fefae0]/60 transition-colors hover:text-[#fefae0]"
-                    >
-                      {link}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Right — Support */}
+          <div>
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#fefae0]/40">
+              Support
+            </h4>
+            <ul className="space-y-2">
+              {footerLinks.Support.map((link) => (
+                <li key={link.label}>
+                  <Link
+                    href={link.href}
+                    className="text-sm text-[#fefae0]/70 transition-opacity hover:opacity-100"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* Bottom bar */}

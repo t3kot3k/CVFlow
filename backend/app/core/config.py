@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     # Firebase
     FIREBASE_PROJECT_ID: str = ""
     FIREBASE_SERVICE_ACCOUNT_PATH: str = "./service-account.json"
+    FIREBASE_API_KEY: str = ""  # Web API key — same as NEXT_PUBLIC_FIREBASE_API_KEY
 
     # Google Gemini AI
     GEMINI_API_KEY: str = ""

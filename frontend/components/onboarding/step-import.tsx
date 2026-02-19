@@ -92,10 +92,12 @@ export function StepImport({ selected, onSelect }: StepImportProps) {
         </button>
 
         {/* LinkedIn */}
-        <button
-          type="button"
+        <div
+          role="button"
+          tabIndex={0}
           onClick={() => onSelect("linkedin")}
-          className={`text-left p-6 rounded-2xl border-2 transition-all ${
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onSelect("linkedin")}
+          className={`cursor-pointer text-left p-6 rounded-2xl border-2 transition-all ${
             selected === "linkedin"
               ? "border-[#dda15e] bg-[#dda15e]/5"
               : "border-gray-100 bg-white hover:border-gray-200"
@@ -128,7 +130,7 @@ export function StepImport({ selected, onSelect }: StepImportProps) {
               )}
             </div>
           </div>
-        </button>
+        </div>
 
         {/* From scratch */}
         <button

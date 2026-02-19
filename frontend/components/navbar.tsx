@@ -6,10 +6,9 @@ import { Menu, X, Leaf } from "lucide-react"
 
 const navLinks = [
   { label: "Features", href: "#features" },
-  { label: "Templates", href: "#templates" },
+  { label: "Templates", href: "/templates" },
   { label: "Pricing", href: "#pricing" },
-  { label: "Blog", href: "#blog" },
-  { label: "For Universities", href: "#universities" },
+  { label: "Blog", href: "/blog" },
 ]
 
 export function Navbar() {

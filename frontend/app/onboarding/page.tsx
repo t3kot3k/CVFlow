@@ -9,6 +9,7 @@ import { StepCountry } from "@/components/onboarding/step-country"
 import { StepIndustry } from "@/components/onboarding/step-industry"
 import { StepImport } from "@/components/onboarding/step-import"
 import { StepComplete } from "@/components/onboarding/step-complete"
+import { getCurrentUser } from "@/lib/firebase"
 
 const stepLabels = [
   "Your situation",
@@ -19,21 +20,60 @@ const stepLabels = [
 ]
 
 const countryMap: Record<string, { name: string; flag: string }> = {
-  fr: { name: "France", flag: "\u{1F1EB}\u{1F1F7}" },
-  sn: { name: "S\u00e9n\u00e9gal", flag: "\u{1F1F8}\u{1F1F3}" },
-  de: { name: "Germany", flag: "\u{1F1E9}\u{1F1EA}" },
-  us: { name: "USA", flag: "\u{1F1FA}\u{1F1F8}" },
-  gb: { name: "UK", flag: "\u{1F1EC}\u{1F1E7}" },
-  in: { name: "India", flag: "\u{1F1EE}\u{1F1F3}" },
-  ma: { name: "Morocco", flag: "\u{1F1F2}\u{1F1E6}" },
-  gh: { name: "Ghana", flag: "\u{1F1EC}\u{1F1ED}" },
-  ng: { name: "Nigeria", flag: "\u{1F1F3}\u{1F1EC}" },
-  ke: { name: "Kenya", flag: "\u{1F1F0}\u{1F1EA}" },
-  za: { name: "South Africa", flag: "\u{1F1FF}\u{1F1E6}" },
-  ca: { name: "Canada", flag: "\u{1F1E8}\u{1F1E6}" },
-  br: { name: "Brazil", flag: "\u{1F1E7}\u{1F1F7}" },
-  ae: { name: "UAE", flag: "\u{1F1E6}\u{1F1EA}" },
-  eg: { name: "Egypt", flag: "\u{1F1EA}\u{1F1EC}" },
+  // Europe francophone
+  fr: { name: "France",             flag: "🇫🇷" },
+  be: { name: "Belgique",           flag: "🇧🇪" },
+  ch: { name: "Suisse",             flag: "🇨🇭" },
+  lu: { name: "Luxembourg",         flag: "🇱🇺" },
+  mc: { name: "Monaco",             flag: "🇲🇨" },
+  // Afrique du Nord
+  ma: { name: "Maroc",              flag: "🇲🇦" },
+  dz: { name: "Algérie",            flag: "🇩🇿" },
+  tn: { name: "Tunisie",            flag: "🇹🇳" },
+  mr: { name: "Mauritanie",         flag: "🇲🇷" },
+  // Afrique de l'Ouest
+  sn: { name: "Sénégal",            flag: "🇸🇳" },
+  ci: { name: "Côte d'Ivoire",      flag: "🇨🇮" },
+  ml: { name: "Mali",               flag: "🇲🇱" },
+  bf: { name: "Burkina Faso",       flag: "🇧🇫" },
+  ne: { name: "Niger",              flag: "🇳🇪" },
+  tg: { name: "Togo",               flag: "🇹🇬" },
+  bj: { name: "Bénin",              flag: "🇧🇯" },
+  gn: { name: "Guinée",             flag: "🇬🇳" },
+  gw: { name: "Guinée-Bissau",      flag: "🇬🇼" },
+  // Afrique centrale
+  cm: { name: "Cameroun",           flag: "🇨🇲" },
+  ga: { name: "Gabon",              flag: "🇬🇦" },
+  cg: { name: "Congo-Brazzaville",  flag: "🇨🇬" },
+  cd: { name: "RD Congo",           flag: "🇨🇩" },
+  cf: { name: "Centrafrique",       flag: "🇨🇫" },
+  td: { name: "Tchad",              flag: "🇹🇩" },
+  gq: { name: "Guinée équatoriale", flag: "🇬🇶" },
+  // Afrique de l'Est & îles
+  mg: { name: "Madagascar",         flag: "🇲🇬" },
+  rw: { name: "Rwanda",             flag: "🇷🇼" },
+  bi: { name: "Burundi",            flag: "🇧🇮" },
+  dj: { name: "Djibouti",           flag: "🇩🇯" },
+  km: { name: "Comores",            flag: "🇰🇲" },
+  sc: { name: "Seychelles",         flag: "🇸🇨" },
+  mu: { name: "Maurice",            flag: "🇲🇺" },
+  // Amérique & Caraïbes
+  ca: { name: "Canada",             flag: "🇨🇦" },
+  ht: { name: "Haïti",              flag: "🇭🇹" },
+  // Moyen-Orient
+  lb: { name: "Liban",              flag: "🇱🇧" },
+  // Autres
+  de: { name: "Germany",            flag: "🇩🇪" },
+  us: { name: "USA",                flag: "🇺🇸" },
+  gb: { name: "UK",                 flag: "🇬🇧" },
+  in: { name: "India",              flag: "🇮🇳" },
+  gh: { name: "Ghana",              flag: "🇬🇭" },
+  ng: { name: "Nigeria",            flag: "🇳🇬" },
+  ke: { name: "Kenya",              flag: "🇰🇪" },
+  za: { name: "South Africa",       flag: "🇿🇦" },
+  br: { name: "Brazil",             flag: "🇧🇷" },
+  ae: { name: "UAE",                flag: "🇦🇪" },
+  eg: { name: "Egypt",              flag: "🇪🇬" },
 }
 
 const goalLabels: Record<string, string> = {
@@ -183,7 +223,7 @@ export default function OnboardingPage() {
             {step === 4 && (
               <StepComplete
                 key="step-4"
-                userName="Amara"
+                userName={getCurrentUser()?.displayName?.split(" ")[0] ?? ""}
                 country={countryMap[country]?.name || country}
                 countryFlag={countryMap[country]?.flag || ""}
                 industry={industries.join(", ")}

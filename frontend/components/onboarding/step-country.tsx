@@ -6,24 +6,71 @@ import { Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 
 const allCountries = [
-  { code: "fr", flag: "\u{1F1EB}\u{1F1F7}", name: "France", format: "Photo optional \u00b7 A4 \u00b7 1\u20132 pages \u00b7 Formal cover letter expected" },
-  { code: "sn", flag: "\u{1F1F8}\u{1F1F3}", name: "S\u00e9n\u00e9gal", format: "Photo common \u00b7 A4 \u00b7 2 pages \u00b7 French language" },
-  { code: "de", flag: "\u{1F1E9}\u{1F1EA}", name: "Germany", format: "Photo expected \u00b7 A4 \u00b7 1\u20132 pages \u00b7 Europass accepted" },
-  { code: "us", flag: "\u{1F1FA}\u{1F1F8}", name: "USA", format: "No photo \u00b7 Letter size \u00b7 1 page \u00b7 Concise bullet points" },
-  { code: "gb", flag: "\u{1F1EC}\u{1F1E7}", name: "UK", format: "No photo \u00b7 A4 \u00b7 2 pages max \u00b7 Skills-focused" },
-  { code: "in", flag: "\u{1F1EE}\u{1F1F3}", name: "India", format: "Photo optional \u00b7 A4 \u00b7 2\u20133 pages \u00b7 Detailed experience" },
-  { code: "ma", flag: "\u{1F1F2}\u{1F1E6}", name: "Morocco", format: "Photo common \u00b7 A4 \u00b7 1\u20132 pages \u00b7 French or Arabic" },
-  { code: "gh", flag: "\u{1F1EC}\u{1F1ED}", name: "Ghana", format: "Photo optional \u00b7 A4 \u00b7 2 pages \u00b7 English" },
-  { code: "ng", flag: "\u{1F1F3}\u{1F1EC}", name: "Nigeria", format: "Photo optional \u00b7 A4 \u00b7 2 pages \u00b7 English" },
-  { code: "ke", flag: "\u{1F1F0}\u{1F1EA}", name: "Kenya", format: "Photo optional \u00b7 A4 \u00b7 2 pages \u00b7 English" },
-  { code: "za", flag: "\u{1F1FF}\u{1F1E6}", name: "South Africa", format: "No photo \u00b7 A4 \u00b7 2\u20133 pages \u00b7 English" },
-  { code: "ca", flag: "\u{1F1E8}\u{1F1E6}", name: "Canada", format: "No photo \u00b7 Letter size \u00b7 1\u20132 pages \u00b7 Bilingual options" },
-  { code: "br", flag: "\u{1F1E7}\u{1F1F7}", name: "Brazil", format: "Photo common \u00b7 A4 \u00b7 1\u20132 pages \u00b7 Portuguese" },
-  { code: "ae", flag: "\u{1F1E6}\u{1F1EA}", name: "UAE", format: "Photo expected \u00b7 A4 \u00b7 1\u20132 pages \u00b7 English preferred" },
-  { code: "eg", flag: "\u{1F1EA}\u{1F1EC}", name: "Egypt", format: "Photo common \u00b7 A4 \u00b7 1\u20132 pages \u00b7 Arabic or English" },
+  // ── Europe francophone ──────────────────────────────────────────────────
+  { code: "fr", flag: "🇫🇷", name: "France",          format: "Photo optionnelle · A4 · 1–2 pages · Lettre de motivation attendue" },
+  { code: "be", flag: "🇧🇪", name: "Belgique",         format: "Photo optionnelle · A4 · 1–2 pages · Français ou néerlandais" },
+  { code: "ch", flag: "🇨🇭", name: "Suisse",           format: "Photo courante · A4 · 1–2 pages · Très soigné, détaillé" },
+  { code: "lu", flag: "🇱🇺", name: "Luxembourg",       format: "Photo optionnelle · A4 · 1–2 pages · Français / Anglais" },
+  { code: "mc", flag: "🇲🇨", name: "Monaco",           format: "Photo optionnelle · A4 · 1 page · Format français" },
+
+  // ── Afrique du Nord ────────────────────────────────────────────────────
+  { code: "ma", flag: "🇲🇦", name: "Maroc",            format: "Photo courante · A4 · 1–2 pages · Français ou arabe" },
+  { code: "dz", flag: "🇩🇿", name: "Algérie",          format: "Photo courante · A4 · 1–2 pages · Français ou arabe" },
+  { code: "tn", flag: "🇹🇳", name: "Tunisie",          format: "Photo courante · A4 · 1–2 pages · Français ou arabe" },
+  { code: "mr", flag: "🇲🇷", name: "Mauritanie",       format: "Photo courante · A4 · 1–2 pages · Arabe / Français" },
+
+  // ── Afrique de l'Ouest ─────────────────────────────────────────────────
+  { code: "sn", flag: "🇸🇳", name: "Sénégal",          format: "Photo courante · A4 · 2 pages · Français" },
+  { code: "ci", flag: "🇨🇮", name: "Côte d'Ivoire",    format: "Photo courante · A4 · 1–2 pages · Français" },
+  { code: "ml", flag: "🇲🇱", name: "Mali",             format: "Photo courante · A4 · 1–2 pages · Français" },
+  { code: "bf", flag: "🇧🇫", name: "Burkina Faso",     format: "Photo courante · A4 · 1–2 pages · Français" },
+  { code: "ne", flag: "🇳🇪", name: "Niger",            format: "Photo courante · A4 · 1–2 pages · Français" },
+  { code: "tg", flag: "🇹🇬", name: "Togo",             format: "Photo courante · A4 · 1–2 pages · Français" },
+  { code: "bj", flag: "🇧🇯", name: "Bénin",            format: "Photo courante · A4 · 1–2 pages · Français" },
+  { code: "gn", flag: "🇬🇳", name: "Guinée",           format: "Photo courante · A4 · 1–2 pages · Français" },
+  { code: "gw", flag: "🇬🇼", name: "Guinée-Bissau",    format: "Photo courante · A4 · 1–2 pages · Portugais / Français" },
+
+  // ── Afrique centrale ───────────────────────────────────────────────────
+  { code: "cm", flag: "🇨🇲", name: "Cameroun",         format: "Photo courante · A4 · 1–2 pages · Français / Anglais" },
+  { code: "ga", flag: "🇬🇦", name: "Gabon",            format: "Photo courante · A4 · 1–2 pages · Français" },
+  { code: "cg", flag: "🇨🇬", name: "Congo-Brazzaville", format: "Photo courante · A4 · 1–2 pages · Français" },
+  { code: "cd", flag: "🇨🇩", name: "RD Congo",         format: "Photo courante · A4 · 1–2 pages · Français" },
+  { code: "cf", flag: "🇨🇫", name: "Centrafrique",     format: "Photo courante · A4 · 1–2 pages · Français / Sango" },
+  { code: "td", flag: "🇹🇩", name: "Tchad",            format: "Photo courante · A4 · 1–2 pages · Français / Arabe" },
+  { code: "gq", flag: "🇬🇶", name: "Guinée équatoriale", format: "Photo courante · A4 · 1–2 pages · Espagnol / Français" },
+
+  // ── Afrique de l'Est ───────────────────────────────────────────────────
+  { code: "mg", flag: "🇲🇬", name: "Madagascar",       format: "Photo courante · A4 · 1–2 pages · Malgache / Français" },
+  { code: "rw", flag: "🇷🇼", name: "Rwanda",           format: "Photo optionnelle · A4 · 1–2 pages · Français / Anglais" },
+  { code: "bi", flag: "🇧🇮", name: "Burundi",          format: "Photo courante · A4 · 1–2 pages · Français / Kirundi" },
+  { code: "dj", flag: "🇩🇯", name: "Djibouti",         format: "Photo courante · A4 · 1–2 pages · Français / Arabe" },
+  { code: "km", flag: "🇰🇲", name: "Comores",          format: "Photo courante · A4 · 1–2 pages · Français / Arabe" },
+  { code: "sc", flag: "🇸🇨", name: "Seychelles",       format: "Photo optionnelle · A4 · 1–2 pages · Français / Anglais" },
+  { code: "mu", flag: "🇲🇺", name: "Maurice",          format: "Photo optionnelle · A4 · 1–2 pages · Anglais / Français" },
+
+  // ── Amérique & Caraïbes ────────────────────────────────────────────────
+  { code: "ca", flag: "🇨🇦", name: "Canada",           format: "Pas de photo · Letter · 1–2 pages · Bilingue possible" },
+  { code: "ht", flag: "🇭🇹", name: "Haïti",            format: "Photo courante · A4 · 1–2 pages · Français / Créole" },
+
+  // ── Moyen-Orient ───────────────────────────────────────────────────────
+  { code: "lb", flag: "🇱🇧", name: "Liban",            format: "Photo courante · A4 · 1–2 pages · Français / Arabe" },
+
+  // ── Autres (non-francophones mais très demandés) ────────────────────────
+  { code: "de", flag: "🇩🇪", name: "Germany",          format: "Photo expected · A4 · 1–2 pages · Europass accepted" },
+  { code: "us", flag: "🇺🇸", name: "USA",              format: "No photo · Letter size · 1 page · Concise bullet points" },
+  { code: "gb", flag: "🇬🇧", name: "UK",               format: "No photo · A4 · 2 pages max · Skills-focused" },
+  { code: "in", flag: "🇮🇳", name: "India",            format: "Photo optional · A4 · 2–3 pages · Detailed experience" },
+  { code: "gh", flag: "🇬🇭", name: "Ghana",            format: "Photo optional · A4 · 2 pages · English" },
+  { code: "ng", flag: "🇳🇬", name: "Nigeria",          format: "Photo optional · A4 · 2 pages · English" },
+  { code: "ke", flag: "🇰🇪", name: "Kenya",            format: "Photo optional · A4 · 2 pages · English" },
+  { code: "za", flag: "🇿🇦", name: "South Africa",     format: "No photo · A4 · 2–3 pages · English" },
+  { code: "br", flag: "🇧🇷", name: "Brazil",           format: "Photo common · A4 · 1–2 pages · Portuguese" },
+  { code: "ae", flag: "🇦🇪", name: "UAE",              format: "Photo expected · A4 · 1–2 pages · English preferred" },
+  { code: "eg", flag: "🇪🇬", name: "Egypt",            format: "Photo common · A4 · 1–2 pages · Arabic or English" },
 ]
 
-const quickPicks = ["fr", "sn", "de", "us", "gb", "in"]
+// Quick picks: main francophone destinations
+const quickPicks = ["fr", "be", "ch", "sn", "ci", "ma", "ca"]
 
 interface StepCountryProps {
   selected: string
@@ -35,9 +82,8 @@ export function StepCountry({ selected, onSelect }: StepCountryProps) {
 
   const filtered = useMemo(() => {
     if (!search) return []
-    return allCountries.filter((c) =>
-      c.name.toLowerCase().includes(search.toLowerCase())
-    )
+    const q = search.toLowerCase()
+    return allCountries.filter((c) => c.name.toLowerCase().includes(q))
   }, [search])
 
   const selectedCountry = allCountries.find((c) => c.code === selected)
@@ -61,14 +107,14 @@ export function StepCountry({ selected, onSelect }: StepCountryProps) {
       <div className="relative mt-8 w-full max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input
-          placeholder="Search a country..."
+          placeholder="Search a country…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10 rounded-xl bg-white border-gray-200 h-11 text-[#283618] placeholder:text-gray-400 focus-visible:border-[#606c38] focus-visible:ring-[#606c38]/20"
         />
         {/* Dropdown */}
         {search && filtered.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-48 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 max-h-56 overflow-y-auto">
             {filtered.map((c) => (
               <button
                 key={c.code}
@@ -82,15 +128,20 @@ export function StepCountry({ selected, onSelect }: StepCountryProps) {
                 <span className="text-lg">{c.flag}</span>
                 <span className="font-medium">{c.name}</span>
                 <span className="text-xs text-[#606c38] ml-auto truncate max-w-[180px]">
-                  {c.format.split("\u00b7")[0]}
+                  {c.format.split("·")[0].trim()}
                 </span>
               </button>
             ))}
           </div>
         )}
+        {search && filtered.length === 0 && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-10 px-4 py-3 text-sm text-gray-400">
+            No country found for &ldquo;{search}&rdquo;
+          </div>
+        )}
       </div>
 
-      {/* Quick picks */}
+      {/* Quick picks — francophone highlights */}
       <div className="flex flex-wrap justify-center gap-2 mt-6">
         {quickPicks.map((code) => {
           const c = allCountries.find((x) => x.code === code)!
@@ -126,7 +177,7 @@ export function StepCountry({ selected, onSelect }: StepCountryProps) {
             <div className="bg-white border-l-4 border-[#606c38] rounded-lg p-4">
               <p className="text-sm text-[#283618]">
                 <span className="font-semibold">
-                  For {selectedCountry.flag} {selectedCountry.name}:
+                  Pour {selectedCountry.flag} {selectedCountry.name} :
                 </span>{" "}
                 {selectedCountry.format}
               </p>
