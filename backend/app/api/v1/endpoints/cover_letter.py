@@ -24,7 +24,8 @@ async def generate_cover_letter(
     """Generate a cover letter based on CV content and a job description."""
     try:
         from app.services.firebase.cv_service import get_cv
-        from app.services.ai.gemini_client import generate_json
+        from app.services.ai.cover_letter_gen import generate_cover_letter as _gen_cl
+        from app.core.firebase import get_db
         import json
         from datetime import datetime
 
@@ -37,29 +38,24 @@ async def generate_cover_letter(
             )
 
         cv_content = json.dumps(cv.get("content", {}), indent=2)
-
-        prompt = (
-            f"You are an expert cover letter writer. Generate a {body.tone} cover letter "
-            f"in {body.format} format. Language: {body.language}.\n\n"
-            f"CV Content:\n{cv_content[:5000]}\n\n"
-            f"Job Description:\n{body.job_description[:3000]}\n\n"
-        )
         if body.custom_instructions:
-            prompt += f"Additional instructions: {body.custom_instructions}\n\n"
+            cv_content += f"\n\nCandidate instructions: {body.custom_instructions}"
 
-        prompt += (
-            "Return a JSON object with:\n"
-            "- paragraphs: list of strings (each paragraph of the letter)\n"
-            "- word_count: int"
+        # Use the dedicated cover letter AI service (better prompting)
+        paragraphs = await _gen_cl(
+            cv_content=cv_content[:6000],
+            job_description=body.job_description[:3000],
+            tone=body.tone,
+            format=body.format,
+            language=body.language,
         )
 
-        result = await generate_json(prompt)
-        paragraphs = result.get("paragraphs", [])
-        word_count = result.get("word_count", sum(len(p.split()) for p in paragraphs))
+        if not paragraphs:
+            raise ValueError("AI returned an empty cover letter. Please try again.")
+
+        word_count = sum(len(p.split()) for p in paragraphs)
 
         # Save to Firestore
-        from app.core.firebase import get_db
-
         cl_data = {
             "cv_id": body.cv_id,
             "paragraphs": paragraphs,
@@ -99,17 +95,13 @@ async def rewrite_paragraph(
 ):
     """Rewrite a specific paragraph of a cover letter."""
     try:
-        from app.services.ai.gemini_client import generate
+        from app.services.ai.cover_letter_gen import rewrite_paragraph as _rewrite
 
-        prompt = (
-            f"Rewrite the following cover letter paragraph in a {body.tone} tone.\n\n"
-            f"Original paragraph:\n{body.current_text}\n\n"
+        rewritten = await _rewrite(
+            paragraph=body.current_text,
+            tone=body.tone,
+            instructions=body.instructions,
         )
-        if body.instructions:
-            prompt += f"Additional instructions: {body.instructions}\n\n"
-        prompt += "Return ONLY the rewritten paragraph, nothing else."
-
-        rewritten = await generate(prompt)
         return {"rewritten_text": rewritten}
     except Exception as exc:
         raise HTTPException(

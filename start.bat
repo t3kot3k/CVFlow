@@ -5,8 +5,8 @@ echo           CVFlow - Starting Project
 echo ============================================
 echo.
 
-:: Check if ports are already in use
-netstat -ano | findstr :8066 >nul 2>&1
+:: Check if ports are already in use (LISTENING only — ignore TIME_WAIT / ESTABLISHED)
+netstat -ano | findstr :8066 | findstr LISTENING >nul 2>&1
 if %errorlevel%==0 (
     echo [WARNING] Port 8066 is already in use. Run stop.bat first.
     echo.
@@ -14,7 +14,7 @@ if %errorlevel%==0 (
     exit /b 1
 )
 
-netstat -ano | findstr :3066 >nul 2>&1
+netstat -ano | findstr :3066 | findstr LISTENING >nul 2>&1
 if %errorlevel%==0 (
     echo [WARNING] Port 3066 is already in use. Run stop.bat first.
     echo.
@@ -25,7 +25,7 @@ if %errorlevel%==0 (
 :: Start Backend
 echo [1/2] Starting Backend (FastAPI) on port 8066...
 cd /d "%~dp0backend"
-start "CVFlow-Backend" cmd /c "call venv\Scripts\activate.bat && uvicorn app.main:app --reload --port 8066"
+start "CVFlow-Backend" cmd /c "call venv\Scripts\activate.bat && uvicorn app.main:app --reload --host 0.0.0.0 --port 8066"
 cd /d "%~dp0"
 
 :: Wait for backend to start

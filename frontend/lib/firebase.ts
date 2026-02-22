@@ -37,12 +37,27 @@ linkedinProvider.addScope("email");
 
 /**
  * Get the current user's Firebase ID token for API authentication.
+ * If auth.currentUser is already set, return the token immediately.
+ * Otherwise wait for the first onAuthStateChanged callback (handles the brief
+ * window between Firebase SDK init and session restore from localStorage).
  * Returns null if no user is logged in.
  */
 export async function getIdToken(): Promise<string | null> {
-  const user = auth.currentUser;
-  if (!user) return null;
-  return user.getIdToken();
+  if (auth.currentUser) {
+    return auth.currentUser.getIdToken();
+  }
+  // auth.currentUser is null — Firebase may still be restoring the session.
+  // Wait for the first auth state event (resolves within ~200 ms normally).
+  return new Promise<string | null>((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      unsubscribe();
+      if (user) {
+        user.getIdToken().then(resolve).catch(() => resolve(null));
+      } else {
+        resolve(null);
+      }
+    });
+  });
 }
 
 /**

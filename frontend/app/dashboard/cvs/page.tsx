@@ -10,7 +10,7 @@ import {
 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { cvApi, type CVSummary } from "@/lib/api/cv"
-import { onAuthStateChanged, auth } from "@/lib/firebase"
+import { ApiError } from "@/lib/api/client"
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -55,24 +55,20 @@ export default function CVsListPage() {
       setError(null)
       const data = await cvApi.list()
       setCvs(data)
-    } catch {
-      setError("Failed to load CVs. Please try again.")
+    } catch (err) {
+      const msg = err instanceof ApiError
+        ? `[${err.status}] ${err.message}`
+        : String(err)
+      setError(`Failed to load CVs: ${msg}`)
     } finally {
       setIsLoading(false)
     }
   }, [])
 
-  // Wait for Firebase to finish initializing before calling the API
-  // (avoids 403 on page refresh when auth.currentUser is still null)
+  // AuthGuard (in dashboard layout) already confirmed the user is logged in
+  // before this component mounts — call the API directly.
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        load()
-      } else {
-        setIsLoading(false)
-      }
-    })
-    return () => unsubscribe()
+    load()
   }, [load])
 
   const handleCreate = async () => {
@@ -101,11 +97,25 @@ export default function CVsListPage() {
 
   const handleDownload = async (id: string) => {
     setOpenMenu(null)
+    setError(null)
     setActionLoading(prev => ({ ...prev, [id]: "download" }))
     try {
-      await cvApi.downloadPreview(id)
+      const blob = await cvApi.downloadPreview(id)
+      const url = URL.createObjectURL(blob)
+      const title = cvs.find(c => c.id === id)?.title ?? "cv"
+      const a = document.createElement("a")
+      a.style.display = "none"
+      a.href = url
+      a.download = `${title}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      // Defer cleanup so the browser can initiate the download before we revoke the URL
+      setTimeout(() => {
+        if (a.parentNode) a.parentNode.removeChild(a)
+        URL.revokeObjectURL(url)
+      }, 100)
     } catch {
-      setError("Failed to download PDF.")
+      setError("PDF download failed. Make sure the backend is running.")
     } finally {
       setActionLoading(prev => { const n = { ...prev }; delete n[id]; return n })
     }

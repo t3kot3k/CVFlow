@@ -45,6 +45,7 @@ class NotesUpdate(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.get("/")
+@router.get("", include_in_schema=False)
 async def list_jobs(user: dict = Depends(get_current_user)):
     """List all jobs and compute stats for the current user."""
     try:
@@ -95,6 +96,7 @@ async def list_jobs(user: dict = Depends(get_current_user)):
 
 
 @router.post("/", response_model=JobDetail, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=JobDetail, status_code=status.HTTP_201_CREATED, include_in_schema=False)
 async def create_job(
     body: JobCreate,
     user: dict = Depends(get_current_user),

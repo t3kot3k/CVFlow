@@ -23,10 +23,11 @@ class Settings(BaseSettings):
     FIREBASE_PROJECT_ID: str = ""
     FIREBASE_SERVICE_ACCOUNT_PATH: str = "./service-account.json"
     FIREBASE_API_KEY: str = ""  # Web API key — same as NEXT_PUBLIC_FIREBASE_API_KEY
+    FIREBASE_STORAGE_BUCKET: str = ""  # e.g. "recruit-ai-4dc1c.appspot.com"
 
     # Google Gemini AI
     GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.5-flash-preview-05-20"
+    GEMINI_MODEL: str = "gemini-2.5-flash"
 
     # Stripe
     STRIPE_SECRET_KEY: str = ""

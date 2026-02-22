@@ -3,12 +3,11 @@
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { onAuthStateChanged, auth } from "@/lib/firebase"
 import { motion } from "framer-motion"
 import {
   FileText, Plus, BarChart3, Briefcase, TrendingUp, MoreHorizontal,
   Edit3, Copy, Trash2, Download, Clock, Lightbulb, ArrowRight,
-  CheckCircle, Loader2,
+  CheckCircle, Loader2, Sparkles,
 } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 import { cvApi, type CVSummary } from "@/lib/api/cv"
@@ -60,16 +59,10 @@ export function DashboardMainContent() {
       .finally(() => setIsLoading(false))
   }, [])
 
-  // Wait for Firebase auth to be ready before calling API (avoids 403 on refresh)
+  // AuthGuard (in dashboard layout) already confirmed the user is logged in
+  // before this component mounts — call the API directly.
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        loadCvs()
-      } else {
-        setIsLoading(false)
-      }
-    })
-    return () => unsubscribe()
+    loadCvs()
   }, [loadCvs])
 
   const handleCreate = async () => {
@@ -97,7 +90,21 @@ export function DashboardMainContent() {
   const handleDownload = async (id: string) => {
     setOpenMenu(null)
     setActionLoading(prev => ({ ...prev, [id]: "download" }))
-    try { await cvApi.downloadPreview(id) } catch {}
+    try {
+      const blob = await cvApi.downloadPreview(id)
+      const url = URL.createObjectURL(blob)
+      const title = cvs.find(c => c.id === id)?.title ?? "cv"
+      const a = document.createElement("a")
+      a.style.display = "none"
+      a.href = url
+      a.download = `${title}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      setTimeout(() => {
+        if (a.parentNode) a.parentNode.removeChild(a)
+        URL.revokeObjectURL(url)
+      }, 100)
+    } catch {}
     finally {
       setActionLoading(prev => { const n = { ...prev }; delete n[id]; return n })
     }
@@ -134,22 +141,22 @@ export function DashboardMainContent() {
 
   const stats = [
     {
+      label: "Avg. ATS Score",
+      value: isLoading ? "—" : avgAts !== null ? `${avgAts}%` : "N/A",
+      change: isLoading ? "" : avgAts !== null
+        ? (avgAts >= 80 ? "Great score!" : avgAts >= 60 ? "Room to improve" : "Needs work")
+        : "Run your first analysis",
+      icon: BarChart3,
+      color: "bg-[#dda15e]/10 text-[#dda15e]",
+      href: "/dashboard/ats",
+    },
+    {
       label: "Total CVs",
       value: isLoading ? "—" : String(totalCVs),
       change: isLoading ? "" : totalCVs === 0 ? "No resumes yet" : `${totalCVs} ${totalCVs === 1 ? "resume" : "resumes"}`,
       icon: FileText,
       color: "bg-[#606c38]/10 text-[#606c38]",
       href: "/dashboard/cvs",
-    },
-    {
-      label: "Avg. ATS Score",
-      value: isLoading ? "—" : avgAts !== null ? `${avgAts}%` : "N/A",
-      change: isLoading ? "" : avgAts !== null
-        ? (avgAts >= 80 ? "Great score!" : avgAts >= 60 ? "Room to improve" : "Needs work")
-        : "No scores yet",
-      icon: BarChart3,
-      color: "bg-[#dda15e]/10 text-[#dda15e]",
-      href: "/dashboard/ats",
     },
     {
       label: "Applications Sent",
@@ -344,9 +351,87 @@ export function DashboardMainContent() {
         {/* Right column — 1/3 */}
         <div className="space-y-6">
 
+          {/* ATS Score Card */}
+          <motion.div
+            custom={6}
+            variants={fadeUp}
+            initial="hidden"
+            animate="show"
+            className="rounded-2xl border border-[#283618]/10 bg-[#283618] p-5 text-[#fefae0]"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-[#dda15e]" />
+                <h3 className="text-sm font-bold">ATS Score</h3>
+              </div>
+              {avgAts !== null && (
+                <span
+                  className="text-xs font-semibold"
+                  style={{ color: avgAts >= 80 ? "#606c38" : avgAts >= 60 ? "#dda15e" : "#bc6c25" }}
+                >
+                  {avgAts >= 80 ? "Great" : avgAts >= 60 ? "Fair" : "Low"}
+                </span>
+              )}
+            </div>
+
+            {isLoading ? (
+              <div className="mt-4 h-12 animate-pulse rounded-xl bg-[#fefae0]/10" />
+            ) : avgAts !== null ? (
+              <>
+                <div className="mt-4 flex items-center gap-4">
+                  {/* Mini gauge */}
+                  <div className="relative flex h-16 w-16 shrink-0 items-center justify-center">
+                    <svg className="-rotate-90 h-16 w-16" viewBox="0 0 64 64">
+                      <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(254,250,224,0.1)" strokeWidth="6" />
+                      <circle
+                        cx="32" cy="32" r="26" fill="none"
+                        stroke={avgAts >= 80 ? "#606c38" : avgAts >= 60 ? "#dda15e" : "#bc6c25"}
+                        strokeWidth="6" strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 26}
+                        strokeDashoffset={2 * Math.PI * 26 * (1 - avgAts / 100)}
+                        style={{ transition: "stroke-dashoffset 1s ease" }}
+                      />
+                    </svg>
+                    <span className="absolute text-lg font-bold text-[#fefae0]">{avgAts}</span>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[#fefae0]/60">Average across {atsScores.length} {atsScores.length === 1 ? "CV" : "CVs"}</p>
+                    <p className="mt-1 text-xs text-[#fefae0]/80 leading-relaxed">
+                      {avgAts >= 80
+                        ? "Your CVs pass most ATS filters."
+                        : avgAts >= 60
+                        ? "Tailor your CVs to specific job offers."
+                        : "Your CVs need more tailoring."}
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  href="/dashboard/ats"
+                  className="mt-4 flex items-center justify-center gap-2 rounded-full bg-[#dda15e] py-2 text-sm font-bold text-[#283618] transition-colors hover:bg-[#bc6c25]"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Tailor a CV to a job →
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="mt-3 text-xs text-[#fefae0]/60 leading-relaxed">
+                  Analyze your CV against a job offer and get an instant score + improvement suggestions.
+                </p>
+                <Link
+                  href="/dashboard/ats"
+                  className="mt-4 flex items-center justify-center gap-2 rounded-full bg-[#dda15e] py-2 text-sm font-bold text-[#283618] transition-colors hover:bg-[#bc6c25]"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Run ATS analysis →
+                </Link>
+              </>
+            )}
+          </motion.div>
+
           {/* Quick Tip */}
           <motion.div
-            custom={7}
+            custom={8}
             variants={fadeUp}
             initial="hidden"
             animate="show"
@@ -367,7 +452,7 @@ export function DashboardMainContent() {
 
           {/* Get Started checklist */}
           <motion.div
-            custom={8}
+            custom={9}
             variants={fadeUp}
             initial="hidden"
             animate="show"
@@ -396,7 +481,7 @@ export function DashboardMainContent() {
 
           {/* Quick links */}
           <motion.div
-            custom={9}
+            custom={10}
             variants={fadeUp}
             initial="hidden"
             animate="show"

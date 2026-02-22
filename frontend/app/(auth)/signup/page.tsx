@@ -85,12 +85,15 @@ export default function SignUpPage() {
   const [error, setError] = useState("")
   const router = useRouter()
 
-  // Handle result when Firebase redirects back after signInWithRedirect
+  // Handle result when Firebase redirects back after signInWithRedirect.
+  // Important: do NOT set loading=true before the result arrives —
+  // getAuthRedirectResult() returns null on normal page loads, so showing
+  // the spinner unconditionally causes a flash on every visit.
   useEffect(() => {
-    setIsRedirectLoading(true)
     getAuthRedirectResult()
       .then(async (result) => {
-        if (!result) { setIsRedirectLoading(false); return }
+        if (!result) return // no redirect pending — nothing to do
+        setIsRedirectLoading(true)
         const idToken = await result.user.getIdToken()
         const isLinkedIn = result.providerId?.includes("oidc")
         const endpoint = isLinkedIn ? "/auth/linkedin" : "/auth/google"

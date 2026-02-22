@@ -1,4 +1,5 @@
-import { request, download } from "./client";
+import { request, download, API_BASE_URL } from "./client";
+import { getIdToken } from "@/lib/firebase";
 
 export interface CVSummary {
   id: string;
@@ -80,6 +81,23 @@ export const cvApi = {
 
   downloadPreview: (id: string) =>
     download(`/cv/${id}/preview`),
+
+  /** Upload a local PDF and create a new CV (AI-parsed). */
+  uploadPdf: async (file: File): Promise<CVDetail> => {
+    const token = await getIdToken();
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch(`${API_BASE_URL}/cv/upload-pdf`, {
+      method: "POST",
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      body: formData,
+    });
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      throw new Error(data?.detail || "Upload failed");
+    }
+    return data as CVDetail;
+  },
 };
 
 export const cvAiApi = {

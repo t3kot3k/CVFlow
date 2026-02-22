@@ -3,7 +3,8 @@
     "allow": [
       "Bash(taskkill:*)",
       "Bash(npx tsc:*)",
-      "Bash(powershell -c:*)"
+      "Bash(powershell -c:*)",
+      "Bash(curl:*)"
     ]
   }
 }

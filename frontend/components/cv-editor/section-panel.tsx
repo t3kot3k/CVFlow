@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   GripVertical,
@@ -14,36 +15,63 @@ import {
   Link as LinkIcon,
   Check,
   Plus,
-  ChevronRight,
 } from "lucide-react"
+import type { CVContent } from "@/lib/api/cv"
 
 interface SectionItem {
   id: string
   label: string
   icon: React.ElementType
-  status: "completed" | "active" | "pending"
 }
 
-const defaultSections: SectionItem[] = [
-  { id: "contact", label: "Contact Info", icon: User, status: "completed" },
-  { id: "summary", label: "Professional Summary", icon: FileText, status: "completed" },
-  { id: "experience", label: "Work Experience", icon: Briefcase, status: "active" },
-  { id: "education", label: "Education", icon: GraduationCap, status: "pending" },
-  { id: "skills", label: "Skills", icon: Wrench, status: "pending" },
-  { id: "languages", label: "Languages", icon: Globe, status: "pending" },
-  { id: "certifications", label: "Certifications", icon: Award, status: "pending" },
-  { id: "projects", label: "Projects", icon: LinkIcon, status: "pending" },
+const SECTIONS: SectionItem[] = [
+  { id: "contact", label: "Contact Info", icon: User },
+  { id: "summary", label: "Professional Summary", icon: FileText },
+  { id: "experience", label: "Work Experience", icon: Briefcase },
+  { id: "education", label: "Education", icon: GraduationCap },
+  { id: "skills", label: "Skills", icon: Wrench },
+  { id: "languages", label: "Languages", icon: Globe },
+  { id: "certifications", label: "Certifications", icon: Award },
+  { id: "projects", label: "Projects", icon: LinkIcon },
 ]
 
-const addSectionOptions = ["Publications", "Awards", "Volunteer", "References", "Custom..."]
+const ADD_OPTIONS = ["Publications", "Awards", "Volunteer", "References", "Custom..."]
+
+function getSectionStatus(
+  id: string,
+  content: CVContent,
+  activeSection: string
+): "completed" | "active" | "pending" {
+  if (id === activeSection) return "active"
+  switch (id) {
+    case "contact":
+      return content.contact_info?.name ? "completed" : "pending"
+    case "summary":
+      return content.summary ? "completed" : "pending"
+    case "experience":
+      return (content.experience?.length ?? 0) > 0 ? "completed" : "pending"
+    case "education":
+      return (content.education?.length ?? 0) > 0 ? "completed" : "pending"
+    case "skills":
+      return (content.skills?.length ?? 0) > 0 ? "completed" : "pending"
+    case "languages":
+      return (content.languages?.length ?? 0) > 0 ? "completed" : "pending"
+    case "certifications":
+      return (content.certifications?.length ?? 0) > 0 ? "completed" : "pending"
+    case "projects":
+      return (content.projects?.length ?? 0) > 0 ? "completed" : "pending"
+    default:
+      return "pending"
+  }
+}
 
 interface SectionPanelProps {
   activeSection: string
   onSectionChange: (id: string) => void
+  content: CVContent
 }
 
-export function SectionPanel({ activeSection, onSectionChange }: SectionPanelProps) {
-  const [sections] = useState<SectionItem[]>(defaultSections)
+export function SectionPanel({ activeSection, onSectionChange, content }: SectionPanelProps) {
   const [addOpen, setAddOpen] = useState(false)
   const [activeTemplate, setActiveTemplate] = useState(0)
 
@@ -58,10 +86,10 @@ export function SectionPanel({ activeSection, onSectionChange }: SectionPanelPro
 
       {/* Section list */}
       <nav className="flex-1 space-y-1 px-2">
-        {sections.map((section) => {
-          const isActive = section.id === activeSection
-          const isCompleted = section.status === "completed"
-          const isPending = section.status === "pending" && !isActive
+        {SECTIONS.map((section) => {
+          const status = getSectionStatus(section.id, content, activeSection)
+          const isActive = status === "active"
+          const isCompleted = status === "completed"
 
           return (
             <button
@@ -105,7 +133,7 @@ export function SectionPanel({ activeSection, onSectionChange }: SectionPanelPro
               exit={{ opacity: 0, y: 4 }}
               className="absolute bottom-full left-2 right-2 mb-1 overflow-hidden rounded-xl border border-[#606c38]/30 bg-[#283618] shadow-xl"
             >
-              {addSectionOptions.map((opt) => (
+              {ADD_OPTIONS.map((opt) => (
                 <button
                   key={opt}
                   onClick={() => setAddOpen(false)}
@@ -133,7 +161,6 @@ export function SectionPanel({ activeSection, onSectionChange }: SectionPanelPro
                   : "border-[#fefae0]/20 hover:border-[#fefae0]/40"
               } overflow-hidden bg-white`}
             >
-              {/* Mini template preview */}
               <div className="h-full w-full p-0.5">
                 <div className={`h-[6px] w-full rounded-sm ${i === 0 ? "bg-[#dda15e]" : "bg-[#283618]"}`} />
                 <div className="mt-0.5 space-y-0.5">
@@ -144,9 +171,12 @@ export function SectionPanel({ activeSection, onSectionChange }: SectionPanelPro
               </div>
             </button>
           ))}
-          <button className="ml-auto text-xs text-[#dda15e] transition-colors hover:text-[#fefae0]">
+          <Link
+            href="/dashboard/templates"
+            className="ml-auto text-xs text-[#dda15e] transition-colors hover:text-[#fefae0]"
+          >
             {"See all \u2192"}
-          </button>
+          </Link>
         </div>
       </div>
     </aside>

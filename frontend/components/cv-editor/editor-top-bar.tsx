@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   ArrowLeft,
@@ -13,6 +14,19 @@ import {
   Save,
 } from "lucide-react"
 
+const TEMPLATE_NAMES: Record<string, string> = {
+  olive: "Olive",
+  slate: "Slate",
+  azure: "Azure",
+  bordeaux: "Bordeaux",
+  tokyo: "Tokyo",
+  cambridge: "Cambridge",
+  berlin: "Berlin",
+  silicon: "Silicon",
+  paris: "Paris",
+  nova: "Nova",
+}
+
 interface EditorTopBarProps {
   title: string
   onTitleChange: (title: string) => void
@@ -20,6 +34,10 @@ interface EditorTopBarProps {
   onDownload: () => void
   saveStatus: "saved" | "saving" | "unsaved"
   isSaving: boolean
+  templateId?: string
+  onTemplateChange?: (id: string) => void
+  cvLanguage?: string
+  onLanguageChange?: (lang: string) => void
 }
 
 export function EditorTopBar({
@@ -29,11 +47,26 @@ export function EditorTopBar({
   onDownload,
   saveStatus,
   isSaving,
+  templateId,
+  onTemplateChange,
+  cvLanguage = "en",
+  onLanguageChange,
 }: EditorTopBarProps) {
+  const router = useRouter()
   const [localTitle, setLocalTitle] = useState(title)
   const [editing, setEditing] = useState(false)
   const [downloadOpen, setDownloadOpen] = useState(false)
+  const [templateOpen, setTemplateOpen] = useState(false)
+  const [langOpen, setLangOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const templateName = TEMPLATE_NAMES[templateId ?? "olive"] ?? "Olive"
+
+  const LANGUAGES = [
+    { code: "en", label: "English", flag: "🇬🇧" },
+    { code: "fr", label: "Français", flag: "🇫🇷" },
+  ]
+  const currentLang = LANGUAGES.find(l => l.code === cvLanguage) ?? LANGUAGES[0]
 
   // Sync external title changes
   useEffect(() => {
@@ -127,14 +160,94 @@ export function EditorTopBar({
 
       {/* Center cluster */}
       <div className="hidden items-center gap-2 md:flex">
-        <button className="flex items-center gap-1.5 rounded-full border border-[#606c38]/30 px-3 py-1 text-sm text-[#283618] transition-colors hover:border-[#606c38]">
-          Olive Template
-          <ChevronDown className="h-3.5 w-3.5 text-[#606c38]" />
-        </button>
-        <button className="flex items-center gap-1.5 rounded-full border border-[#606c38]/30 px-3 py-1 text-sm text-[#283618] transition-colors hover:border-[#606c38]">
-          English
-          <ChevronDown className="h-3.5 w-3.5 text-[#606c38]" />
-        </button>
+        {/* Template selector */}
+        <div className="relative">
+          <button
+            onClick={() => setTemplateOpen(!templateOpen)}
+            className="flex items-center gap-1.5 rounded-full border border-[#606c38]/30 px-3 py-1 text-sm text-[#283618] transition-colors hover:border-[#606c38]"
+          >
+            {templateName} Template
+            <ChevronDown className={`h-3.5 w-3.5 text-[#606c38] transition-transform ${templateOpen ? "rotate-180" : ""}`} />
+          </button>
+          <AnimatePresence>
+            {templateOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setTemplateOpen(false)} />
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="absolute left-0 top-full z-20 mt-1 w-48 overflow-hidden rounded-xl border border-[#606c38]/15 bg-white shadow-lg"
+                >
+                  {Object.entries(TEMPLATE_NAMES).map(([id, name]) => (
+                    <button
+                      key={id}
+                      onClick={() => {
+                        setTemplateOpen(false)
+                        onTemplateChange?.(id)
+                      }}
+                      className={`flex w-full items-center justify-between px-4 py-2 text-sm transition-colors hover:bg-[#fefae0] ${
+                        (templateId ?? "olive") === id ? "font-semibold text-[#dda15e]" : "text-[#283618]"
+                      }`}
+                    >
+                      {name}
+                      {(templateId ?? "olive") === id && <Check className="h-3.5 w-3.5 text-[#dda15e]" />}
+                    </button>
+                  ))}
+                  <div className="border-t border-[#606c38]/10">
+                    <button
+                      onClick={() => { setTemplateOpen(false); router.push("/dashboard/templates") }}
+                      className="flex w-full items-center gap-1.5 px-4 py-2 text-sm font-semibold text-[#dda15e] transition-colors hover:bg-[#fefae0]"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      See all templates →
+                    </button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Language selector */}
+        <div className="relative">
+          <button
+            onClick={() => setLangOpen(!langOpen)}
+            className="flex items-center gap-1.5 rounded-full border border-[#606c38]/30 px-3 py-1 text-sm text-[#283618] transition-colors hover:border-[#606c38]"
+          >
+            <span>{currentLang.flag}</span>
+            {currentLang.label}
+            <ChevronDown className={`h-3.5 w-3.5 text-[#606c38] transition-transform ${langOpen ? "rotate-180" : ""}`} />
+          </button>
+          <AnimatePresence>
+            {langOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setLangOpen(false)} />
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="absolute left-0 top-full z-20 mt-1 w-36 overflow-hidden rounded-xl border border-[#606c38]/15 bg-white shadow-lg"
+                >
+                  {LANGUAGES.map(lang => (
+                    <button
+                      key={lang.code}
+                      onClick={() => { setLangOpen(false); onLanguageChange?.(lang.code) }}
+                      className={`flex w-full items-center justify-between px-4 py-2 text-sm transition-colors hover:bg-[#fefae0] ${
+                        cvLanguage === lang.code ? "font-semibold text-[#dda15e]" : "text-[#283618]"
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span>{lang.flag}</span> {lang.label}
+                      </span>
+                      {cvLanguage === lang.code && <Check className="h-3.5 w-3.5 text-[#dda15e]" />}
+                    </button>
+                  ))}
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
         <button className="flex items-center gap-1.5 rounded-full border border-[#606c38]/30 px-3 py-1 text-sm text-[#283618] transition-colors hover:border-[#606c38]">
           {"A4 \u00B7 1 page"}
           <ChevronDown className="h-3.5 w-3.5 text-[#606c38]" />
@@ -197,7 +310,7 @@ export function EditorTopBar({
           </AnimatePresence>
         </div>
 
-        {/* Save button (keyboard shortcut hint) */}
+        {/* Save button */}
         <button
           onClick={onSave}
           disabled={saveStatus === "saved"}

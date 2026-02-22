@@ -1,7 +1,9 @@
 import { getIdToken } from "@/lib/firebase";
 
+// Use a relative URL so all requests go through the Next.js dev proxy (no CORS).
+// In production, configure a reverse proxy (nginx etc.) for /api/v1 → backend.
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8066/api/v1";
+  process.env.NEXT_PUBLIC_API_URL || "/api/v1";
 
 interface RequestOptions extends RequestInit {
   authenticated?: boolean;
@@ -20,14 +22,20 @@ export class ApiError extends Error {
 }
 
 /**
- * On 401 / 403: sign out Firebase and redirect to /login.
- * Fire-and-forget (no await needed at call site).
+ * On 401 / 403: only redirect to /login if Firebase session is truly gone.
+ * Transient 401/403 from the API (timing, proxy, etc.) won't force a redirect
+ * when the user is still authenticated in Firebase.
  */
 function handleAuthError(): void {
   if (typeof window === "undefined") return;
-  // Lazy import avoids circular dependency
-  import("@/lib/firebase").then(({ logOut }) => logOut()).catch(() => {});
-  window.location.href = "/login";
+  import("@/lib/firebase")
+    .then(({ auth }) => {
+      if (!auth.currentUser) {
+        window.location.href = "/login";
+      }
+      // User still authenticated → let the error propagate to the caller's .catch()
+    })
+    .catch(() => {});
 }
 
 async function request<T>(
@@ -80,11 +88,13 @@ async function request<T>(
     if (response.status === 401 || response.status === 403) {
       handleAuthError();
     }
-    throw new ApiError(
-      data?.detail || "Une erreur est survenue",
-      response.status,
-      data
-    );
+    const detail = data?.detail;
+    const message =
+      typeof detail === "string" ? detail
+      : Array.isArray(detail) ? detail.map((e: { msg?: string }) => e?.msg ?? JSON.stringify(e)).join("; ")
+      : detail ? JSON.stringify(detail)
+      : "Une erreur est survenue";
+    throw new ApiError(message, response.status, data);
   }
 
   return data as T;
@@ -102,21 +112,44 @@ async function download(
   };
 
   if (authenticated) {
-    const token = await getIdToken();
-    if (token) headers["Authorization"] = `Bearer ${token}`;
+    try {
+      const token = await getIdToken();
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+    } catch (error) {
+      console.error("Failed to get auth token:", error);
+    }
   }
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-    ...fetchOptions,
-    headers,
-  });
+  if (fetchOptions.body && typeof fetchOptions.body === "string") {
+    headers["Content-Type"] = "application/json";
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      ...fetchOptions,
+      headers,
+    });
+  } catch (error) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    throw new ApiError(
+      `Impossible de contacter le serveur. (${errMsg})`,
+      0
+    );
+  }
 
   if (!response.ok) {
     const data = await response.json().catch(() => null);
     if (response.status === 401 || response.status === 403) {
       handleAuthError();
     }
-    throw new ApiError(data?.detail || "Download failed", response.status, data);
+    const detail = data?.detail;
+    const message =
+      typeof detail === "string" ? detail
+      : Array.isArray(detail) ? detail.map((e: { msg?: string }) => e?.msg ?? JSON.stringify(e)).join("; ")
+      : detail ? JSON.stringify(detail)
+      : "Download failed";
+    throw new ApiError(message, response.status, data);
   }
 
   return response.blob();

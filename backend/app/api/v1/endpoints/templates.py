@@ -150,6 +150,7 @@ TEMPLATES: List[dict] = [
 # ---------------------------------------------------------------------------
 
 @router.get("/", response_model=TemplateListResponse)
+@router.get("", response_model=TemplateListResponse, include_in_schema=False)
 async def list_templates(
     region: Optional[str] = Query(None, description="Filter by region: us, uk, europe, international"),
     style: Optional[str] = Query(None, description="Filter by style: modern, classic, creative, minimal, professional, elegant"),

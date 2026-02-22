@@ -20,9 +20,11 @@ export default function CVEditorPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved")
-  const [activeSection, setActiveSection] = useState("experience")
+  const [activeSection, setActiveSection] = useState("contact")
+  const [cvLanguage, setCvLanguage] = useState("en")
   const [aiDrawerOpen, setAiDrawerOpen] = useState(false)
   const [improveText, setImproveText] = useState("")
+  const [improveCallback, setImproveCallback] = useState<((text: string) => void) | null>(null)
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -43,6 +45,8 @@ export default function CVEditorPage() {
     cvApi.get(id)
       .then(data => {
         setCv(data)
+        const stored = localStorage.getItem(`cv-lang-${id}`)
+        if (stored) setCvLanguage(stored)
         setIsLoading(false)
       })
       .catch(() => {
@@ -69,6 +73,12 @@ export default function CVEditorPage() {
     }, 2000)
   }, [cv])
 
+  // Update content and schedule save
+  const handleContentChange = useCallback((newContent: CVContent) => {
+    setCv(prev => prev ? { ...prev, content: newContent } : prev)
+    scheduleAutoSave(newContent)
+  }, [scheduleAutoSave])
+
   // Save title change
   const handleTitleChange = useCallback(async (title: string) => {
     if (!cv) return
@@ -83,6 +93,19 @@ export default function CVEditorPage() {
     } finally {
       setIsSaving(false)
     }
+  }, [cv])
+
+  // Language change (persisted in localStorage per CV)
+  const handleLanguageChange = useCallback((lang: string) => {
+    setCvLanguage(lang)
+    if (id) localStorage.setItem(`cv-lang-${id}`, lang)
+  }, [id])
+
+  // Template change
+  const handleTemplateChange = useCallback((templateId: string) => {
+    if (!cv) return
+    setCv(prev => prev ? { ...prev, template_id: templateId } : prev)
+    cvApi.update(cv.id, { template_id: templateId }).catch(() => {})
   }, [cv])
 
   // Manual save
@@ -101,18 +124,31 @@ export default function CVEditorPage() {
     }
   }, [cv])
 
-  // Download PDF
+  // Download PDF (with proper blob handling)
   const handleDownload = useCallback(async () => {
     if (!cv) return
     try {
-      await cvApi.downloadPreview(cv.id)
+      const blob = await cvApi.downloadPreview(cv.id)
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.style.display = "none"
+      a.href = url
+      a.download = `${cv.title}.pdf`
+      document.body.appendChild(a)
+      a.click()
+      setTimeout(() => {
+        if (a.parentNode) a.parentNode.removeChild(a)
+        URL.revokeObjectURL(url)
+      }, 100)
     } catch {}
   }, [cv])
 
-  const handleImprove = (text: string) => {
+  // Open AI drawer with text to improve + apply callback
+  const handleImprove = useCallback((text: string, onApply: (improved: string) => void) => {
     setImproveText(text)
+    setImproveCallback(() => onApply)
     setAiDrawerOpen(true)
-  }
+  }, [])
 
   // Cleanup timer on unmount
   useEffect(() => {
@@ -143,6 +179,10 @@ export default function CVEditorPage() {
         onDownload={handleDownload}
         saveStatus={saveStatus}
         isSaving={isSaving}
+        templateId={cv?.template_id}
+        onTemplateChange={handleTemplateChange}
+        cvLanguage={cvLanguage}
+        onLanguageChange={handleLanguageChange}
       />
 
       <div className="flex h-[calc(100vh-56px)] pt-14">
@@ -150,6 +190,7 @@ export default function CVEditorPage() {
         <SectionPanel
           activeSection={activeSection}
           onSectionChange={setActiveSection}
+          content={cv?.content ?? {}}
         />
 
         {/* Center: Form panel */}
@@ -157,11 +198,22 @@ export default function CVEditorPage() {
           className="flex-1 overflow-hidden"
           style={{ marginLeft: 200, marginRight: 320 }}
         >
-          <CenterPanel onImprove={handleImprove} />
+          <CenterPanel
+            content={cv?.content ?? {}}
+            activeSection={activeSection}
+            onContentChange={handleContentChange}
+            onSectionChange={setActiveSection}
+            onImprove={handleImprove}
+            cvId={cv?.id ?? ""}
+            cvLanguage={cvLanguage}
+          />
         </main>
 
         {/* Right: Preview panel (320px fixed) */}
-        <PreviewPanel />
+        <PreviewPanel
+          content={cv?.content ?? {}}
+          atsScore={cv?.ats_score ?? null}
+        />
       </div>
 
       {/* AI Assist Drawer */}
@@ -171,6 +223,11 @@ export default function CVEditorPage() {
             open={aiDrawerOpen}
             onClose={() => setAiDrawerOpen(false)}
             originalText={improveText}
+            language={cvLanguage}
+            onApply={(text) => {
+              improveCallback?.(text)
+              setAiDrawerOpen(false)
+            }}
           />
         )}
       </AnimatePresence>

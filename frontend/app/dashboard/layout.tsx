@@ -1,9 +1,31 @@
 "use client"
 
-import { usePathname } from "next/navigation"
+import { useEffect, useState } from "react"
+import { useRouter, usePathname } from "next/navigation"
+import { onAuthStateChanged, auth } from "@/lib/firebase"
 import { DashboardSidebar } from "@/components/dashboard/sidebar"
 import { DashboardTopBar } from "@/components/dashboard/top-bar"
 import { SidebarProvider, useSidebar } from "@/components/dashboard/sidebar-context"
+
+/** Auth guard: redirect to /login if not authenticated after Firebase initialises. */
+function AuthGuard({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+  const [ready, setReady] = useState(false)
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.replace("/login")
+      } else {
+        setReady(true)
+      }
+    })
+    return () => unsubscribe()
+  }, [router])
+
+  if (!ready) return null  // Show nothing while Firebase resolves
+  return <>{children}</>
+}
 
 function DashboardShell({ children }: { children: React.ReactNode }) {
   const { collapsed } = useSidebar()
@@ -48,8 +70,10 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <SidebarProvider>
-      <DashboardShell>{children}</DashboardShell>
-    </SidebarProvider>
+    <AuthGuard>
+      <SidebarProvider>
+        <DashboardShell>{children}</DashboardShell>
+      </SidebarProvider>
+    </AuthGuard>
   )
 }

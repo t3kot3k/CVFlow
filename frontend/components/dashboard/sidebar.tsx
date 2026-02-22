@@ -27,10 +27,10 @@ import {
 const navItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "My CVs", href: "/dashboard/cvs", icon: FileText },
-  { label: "Templates", href: "/dashboard/templates", icon: Palette },
+  { label: "ATS Score", href: "/dashboard/ats", icon: BarChart3 },
   { label: "Cover Letter", href: "/dashboard/cover-letter", icon: Mail },
   { label: "Job Tracker", href: "/dashboard/jobs", icon: Briefcase },
-  { label: "ATS Score", href: "/dashboard/ats", icon: BarChart3 },
+  { label: "Templates", href: "/dashboard/templates", icon: Palette },
   { label: "LinkedIn", href: "/dashboard/linkedin", icon: Linkedin },
   { label: "Interview", href: "/dashboard/interview", icon: Mic },
   { label: "Market Intel", href: "/dashboard/market", icon: TrendingUp },
